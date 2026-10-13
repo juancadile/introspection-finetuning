@@ -3,282 +3,818 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Introspection Fine-Tuning, Revisited</title>
-<meta name="description" content="A replication and extension of Introspection Fine-Tuning (IFT) on Llama-3.2-1B and Qwen3-1.7B: capability-preservation fragility, a KL anchor, DC-SFT, and Jacobian-lens / probe analysis.">
+<title>Problems for Language Model Introspection</title>
+<meta name="description" content="Claims, deflationary readings, and evidential demands: a map of what studies of language model introspection claim, the cheaper explanation each has to rule out, and the control that does it.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #fdfcf9;
-    --fg: #1d1c1a;
-    --muted: #6b6760;
-    --rule: #dcd8d0;
-    --accent: #8a3b12;
-    --table-head: #f3f0e9;
+    color-scheme: light dark;
+    --bg: #f4f1ea;
+    --ink: #1d1b18;
+    --body: #1d1b18;
+    --soft: #37332c;
+    --muted: #524d44;
+    --faint: #6a6457;
+    --accent: #003b71;
+    --accent-soft: rgba(0, 59, 113, 0.30);
+    --rule: #d5cdbb;
+    --rule-strong: #aea695;
+    --card: #faf8f3;
+    --s1: #1d5a9c;
+    --s1-mid: #a9bfd6;
+    --s2: #b5562a;
+    --s2-mid: #dcb39e;
+    --fail: #a34a22;
+    --warn-bg: #f1e3b6;
+    --warn-line: #dcc681;
+    --warn-ink: #6b4e00;
+    --warn-dot: #c08a12;
+    --s3: #a39c8d;
+    --glow-a: rgba(0, 59, 113, 0.10);
+    --glow-b: transparent;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --serif: Newsreader, Georgia, serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #161514;
-      --fg: #e8e5df;
-      --muted: #9d988f;
-      --rule: #34312d;
-      --accent: #e39a6c;
-      --table-head: #1f1e1c;
+      --bg: #0a0e13;
+      --ink: #e8ecf1;
+      --body: #e8ecf1;
+      --soft: #d0d7df;
+      --muted: #a3aebb;
+      --faint: #8f9baa;
+      --accent: #7db0e6;
+      --accent-soft: rgba(125, 176, 230, 0.35);
+      --rule: #243140;
+      --rule-strong: #3d5066;
+      --card: #101720;
+      --s1: #6a9fd8;
+      --s1-mid: #2c4460;
+      --s2: #c9783f;
+      --s2-mid: #5c3219;
+      --fail: #c9783f;
+      --warn-bg: #352b10;
+      --warn-line: #5a4a1d;
+      --warn-ink: #e6c869;
+      --warn-dot: #d9a938;
+      --s3: #6b7684;
+      --glow-a: rgba(64, 120, 186, 0.24);
+      --glow-b: rgba(46, 104, 132, 0.15);
     }
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
-    font-size: 18px;
-    line-height: 1.6;
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  html { background: var(--bg); }
+  body { position: relative; margin: 0; background: var(--bg); color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; }
+  /* Static ambient glow behind the head only; it scrolls away with the page and never sits under a chart. */
+  body::before { content: ""; position: absolute; z-index: 0; top: 0; left: 0; right: 0; height: 760px; pointer-events: none;
+    background: radial-gradient(52% 62% at 24% 0%, var(--glow-a), transparent 70%), radial-gradient(42% 50% at 84% 8%, var(--glow-b), transparent 72%); }
+  @media not (prefers-color-scheme: dark) { body::before { display: none; } }
+  main, footer { position: relative; z-index: 1; }
+  ::selection { background: var(--accent-soft); }
+  a { color: var(--accent); text-decoration: none; background-image: linear-gradient(currentColor, currentColor); background-size: 100% 1px; background-position: 0 100%; background-repeat: no-repeat; padding-bottom: 1px; }
+  em { font-style: italic; }
+
+  main { max-width: 820px; margin: 0 auto; padding: 0 30px; }
+
+  /* Head */
+  .head { padding: 84px 0 0; }
+  .eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin: 0 0 26px; line-height: 1.7; }
+  .eyebrow::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--glow-a); margin-right: 12px; vertical-align: 0.12em; }
+  h1 { font-size: 44px; line-height: 1.1; font-weight: 400; letter-spacing: -0.02em; margin: 0 0 16px; text-wrap: balance; max-width: 15em; }
+  .dek { font-size: 22px; line-height: 1.4; font-style: italic; color: var(--soft); margin: 0 0 34px; }
+  .byline { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.02em; line-height: 1.9; color: var(--muted); margin: 0; }
+  .byline b { font-weight: 500; color: var(--ink); }
+  .byline a { color: inherit; background-image: none; border-bottom: 1px solid var(--rule-strong); }
+
+  .thesis { margin: 56px 0 0; padding: 30px 0 0; border-top: 1px solid var(--ink); }
+  .thesis .label, .result .label { color: var(--accent); }
+  .label { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin: 0 0 14px; }
+  .label::before { content: "\203A" / ""; margin-right: 0.7em; }
+  .thesis p:last-child { font-size: 28px; line-height: 1.32; letter-spacing: -0.012em; margin: 0; max-width: 30em; text-wrap: pretty; }
+
+  /* Sections */
+  main { counter-reset: sec; }
+  section { margin-top: 88px; counter-increment: sec; }
+  h2::before { content: counter(sec, decimal-leading-zero); content: counter(sec, decimal-leading-zero) / ""; display: block; font-family: var(--mono); font-size: 12.5px; font-weight: 500; line-height: 1.6; letter-spacing: 0.14em; color: var(--accent); margin-bottom: 14px;
+    background: linear-gradient(var(--rule), var(--rule)) no-repeat 3.1em 50% / calc(100% - 3.1em) 1px; }
+  h2 { font-size: 27px; line-height: 1.2; font-weight: 500; letter-spacing: -0.015em; margin: 0 0 22px; text-wrap: balance; }
+  .prose { font-size: 19.5px; line-height: 1.66; color: var(--body); max-width: 38em; }
+  .prose p { margin: 0 0 1.1em; text-wrap: pretty; }
+  .prose p:last-child { margin-bottom: 0; }
+  .standfirst { font-size: 19.5px; line-height: 1.6; font-style: italic; color: var(--soft); margin: 0; max-width: 34em; }
+
+  /* Figures */
+  figure { margin: 0; }
+  .fig { margin: 28px 0 0; }
+  .fig h4 { font-family: var(--mono); font-size: 12px; line-height: 1.6; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+  figcaption { margin-top: 16px; font-size: 15.5px; line-height: 1.55; font-style: italic; color: var(--muted); max-width: 42em; }
+  figcaption b { font-family: var(--mono); font-size: 12px; font-style: normal; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-right: 8px; }
+
+  /* Three routes */
+  .routes { display: grid; grid-template-columns: auto minmax(40px, 56px) minmax(0, 1fr) minmax(40px, 56px) auto; align-items: stretch; margin-top: 8px; }
+  .end { align-self: center; font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); background: var(--card); border: 1px solid var(--rule-strong); border-radius: 2px; padding: 11px 13px 10px; white-space: nowrap; }
+  .end::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 9px; vertical-align: 1px; }
+  .end.out::before { border-radius: 0; background: transparent; border: 1.5px solid var(--ink); width: 5px; height: 5px; }
+  .fan { position: relative; min-height: 100%; }
+  .fan svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .fan path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+  .fan .r0 { stroke: var(--s2); stroke-width: 1.5; }
+  .fan .r1 { stroke: var(--s1); stroke-width: 1.5; }
+  .fan .r2 { stroke: var(--s1); stroke-width: 3.5; }
+  .fan .none { stroke: var(--faint); stroke-width: 1.25; stroke-dasharray: 2 5; }
+  .fan.to::after { content: ""; position: absolute; right: -1px; top: 50%; transform: translateY(-50%); border: 5px solid transparent; border-left: 8px solid var(--ink); border-right: 0; }
+  .ways { margin: 0; padding: 0; list-style: none; display: grid; grid-auto-rows: 1fr; background: var(--card); border: 1px solid var(--rule-strong); border-radius: 2px; }
+  .ways li { display: flex; flex-direction: column; justify-content: center; padding: 17px 14px 16px 19px; border-left: 3px solid var(--s1); }
+  .ways li + li { border-top: 1px solid var(--rule); }
+  .ways li:first-child { border-left-color: var(--s2); }
+  .ways li:nth-child(2) { border-left-width: 1.5px; padding-left: 20.5px; }
+  .ways b { display: block; font-size: 19.5px; line-height: 1.3; font-weight: 500; letter-spacing: -0.005em; }
+  .ways span { display: block; font-size: 16.5px; line-height: 1.45; font-style: italic; color: var(--muted); margin-top: 2px; }
+
+  /* The map: a table wider than the text column, one header, one row per claim */
+  .map { margin-top: 52px; width: min(1120px, 100vw - 60px); margin-left: 50%; transform: translateX(-50%); }
+  .map table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; border: 1px solid var(--rule-strong); border-radius: 3px; }
+  .map thead th:first-child { border-top-left-radius: 2px; } .map thead th:last-child { border-top-right-radius: 2px; }
+  .map thead th { position: sticky; top: 0; z-index: 2; background: var(--card); text-align: left; vertical-align: bottom; font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.12em; line-height: 1.5; text-transform: uppercase; color: var(--soft); padding: 14px 18px 13px; border-bottom: 1px solid var(--rule-strong); }
+  .map thead th:nth-child(1) { width: 18%; } .map thead th:nth-child(2) { width: 16%; } .map thead th:nth-child(3) { width: 17%; } .map thead th:nth-child(4) { width: 19%; }
+  .map tbody th, .map tbody td { text-align: left; vertical-align: top; padding: 20px 16px 22px; border-bottom: 1px solid var(--rule); }
+  .map tbody tr:last-child th, .map tbody tr:last-child td { border-bottom: 0; }
+  .map tr > :first-child { padding-left: 22px; } .map tr > :last-child { padding-right: 22px; }
+  .map tbody td { font-size: 16.5px; line-height: 1.55; color: var(--soft); text-wrap: pretty; }
+  .map tbody td:last-child { color: var(--ink); border-left: 1px solid var(--rule); padding-left: 20px; }
+  .map thead th:last-child { border-left: 1px solid var(--rule); padding-left: 20px; }
+  .map tr.is-robust > th { box-shadow: inset 3px 0 0 var(--accent); }
+  .map tr.is-failed > th { box-shadow: inset 3px 0 0 var(--fail); }
+  .map tbody th { font-weight: 400; }
+  .map tbody th > br { display: none; }
+  .map h3 { font-size: 19.5px; line-height: 1.22; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 5px; }
+  .map h3 + p { font-size: 15.5px; line-height: 1.4; font-style: italic; color: var(--muted); margin: 0; }
+  .map td > em:first-child { display: block; color: var(--muted); margin-bottom: 4px; }
+  .map td:last-child > em:first-child { font-family: var(--mono); font-style: normal; font-size: 12.5px; letter-spacing: 0.02em; line-height: 1.6; margin-bottom: 6px; }
+  .status { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; color: var(--warn-ink); background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 3px; padding: 4px 10px 4px 8px; margin: 1px 0 12px; }
+  .status::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 7px; border: 1px solid var(--warn-dot); background: var(--warn-dot); }
+  .status.robust { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .status.failed { background: var(--fail); border-color: var(--fail); color: var(--bg); }
+  .status.robust::before, .status.failed::before { background: currentColor; border-color: currentColor; }
+  .status.failed::before { border-radius: 0; }
+  .notes { margin-top: 16px; padding: 0 22px; font-size: 15.5px; line-height: 1.55; font-style: italic; color: var(--muted); }
+  .notes p { margin: 0 0 3px; }
+
+  /* Case study */
+  .group { margin-top: 72px; border-top: 1px solid var(--ink); }
+  .group > .label { color: var(--accent); font-size: 13px; margin-bottom: 0; padding-top: 14px; }
+  .finding { display: grid; grid-template-columns: 172px 1fr; column-gap: 34px; align-items: baseline; padding-top: 26px; }
+  .finding + .finding { padding-top: 22px; }
+  .fig + .finding { margin-top: 56px; padding-top: 38px; border-top: 1px solid var(--rule); }
+  .finding b { font-size: 40px; line-height: 1; font-weight: 500; letter-spacing: -0.025em; white-space: nowrap; font-variant-numeric: lining-nums; }
+  .finding div > p:first-child { font-size: 20px; line-height: 1.5; color: var(--body); margin: 0; max-width: 26em; text-wrap: pretty; }
+  .finding > div { min-width: 0; }
+  .verdict, .key { margin: 10px 0 0; font-size: 15.5px; line-height: 1.5; font-style: italic; color: var(--muted); max-width: 42em; }
+  .key { margin-top: 20px; }
+  .v { font-family: var(--mono); font-size: 11px; font-style: normal; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; margin-right: 10px; color: var(--muted); }
+  .v::before { content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 7px; vertical-align: 2px; background: currentColor; }
+  .v.for { color: var(--accent); }
+  .v.against { color: var(--fail); }
+  .v.mixed { color: var(--warn-ink); }
+  .key .v ~ .v { margin-left: 16px; }
+  .result { margin: 40px 0 0; padding-top: 28px; border-top: 1px solid var(--ink); }
+  .result .label + p { font-size: 28px; line-height: 1.32; letter-spacing: -0.012em; margin: 0; max-width: 30em; text-wrap: pretty; }
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 44px; }
+  .panel p { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+
+  /* Charts */
+  .chart { width: 100%; }
+  .chart svg { display: block; overflow: visible; }
+  .tick, .reflbl { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
+  .rowlbl { font-family: var(--serif); font-size: 16.5px; fill: var(--body); }
+  .val { font-family: var(--mono); font-size: 12.5px; font-weight: 500; fill: var(--ink); }
+  .rowlbl, .val { paint-order: stroke; stroke: var(--bg); stroke-width: 5px; stroke-linejoin: round; }
+  .grid { stroke: var(--rule); stroke-width: 1; }
+  .ref { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
+  .zone { fill: var(--accent); opacity: 0.07; }
+  .tk { stroke-width: 2.5; stroke-linecap: round; }
+  .tk.s1 { stroke: var(--s1); } .tk.s3 { stroke: var(--s3); }
+  .ci { stroke: var(--ink); stroke-width: 1.25; fill: none; }
+  .hit { fill: transparent; }
+  .dot { stroke: var(--bg); stroke-width: 2; }
+  .dot.s1, .f.s1, .sq.s1 { fill: var(--s1); } .dot.s2, .f.s2 { fill: var(--s2); } .dot.s3, .f.s3 { fill: var(--s3); }
+  .sq.s2 { fill: var(--s2); } .sq.mid2 { fill: var(--s2-mid); } .sq.none { fill: none; stroke: var(--faint); stroke-width: 1; }
+  .rng { stroke-width: 2; stroke-linecap: round; }
+  .ln { fill: none; stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
+  .rng.s1, .ln.s1 { stroke: var(--s1); } .rng.s2, .ln.s2 { stroke: var(--s2); } .rng.s3, .ln.s3 { stroke: var(--s3); }
+  .ln.dash { stroke-dasharray: 4 4; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 22px; font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.01em; color: var(--muted); margin: 0 0 18px; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { flex: none; width: 9px; height: 9px; background: var(--k); }
+  .legend i.line { height: 2px; width: 16px; }
+  .legend i.dashed { height: 0; width: 16px; background: none; border-top: 2px dashed var(--k); }
+  .legend i.hollow { background: none; border: 1px solid var(--faint); }
+  #tip { position: fixed; z-index: 10; box-shadow: 0 0 0 1px var(--accent-soft); pointer-events: none; background: var(--ink); color: var(--bg); font-family: var(--mono); font-size: 12.5px; line-height: 1.6; padding: 7px 10px; border-radius: 3px; white-space: pre-line; max-width: 280px; }
+  details.data { margin-top: 12px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+  details.data summary { cursor: pointer; width: fit-content; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent-soft); border-radius: 3px; padding: 6px 13px; list-style: none; transition: border-color .3s ease; }
+  details.data summary:hover, details.data[open] summary { border-color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { details.data summary { transition: none; } html { scroll-behavior: auto; } }
+  details.data summary::-webkit-details-marker { display: none; }
+  .scroll { overflow-x: auto; }
+  details.data table { border-collapse: collapse; margin-top: 14px; }
+  details.data th, details.data td { text-align: right; padding: 5px 16px 5px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; font-weight: 400; }
+  details.data th { color: var(--ink); font-weight: 500; }
+  details.data th:first-child, details.data td:first-child { text-align: left; }
+
+  /* Next */
+  .next { list-style: none; margin: 0; padding: 0; max-width: 38em; }
+  .next li { position: relative; padding-left: 1.3em; margin-bottom: 18px; }
+  .next li::before { content: "\2013"; position: absolute; left: 0; top: 1px; font-size: 19.5px; color: var(--muted); }
+  .next b { display: block; font-size: 19.5px; line-height: 1.5; font-weight: 400; color: var(--body); }
+  .next span { display: block; font-size: 17px; line-height: 1.5; font-style: italic; color: var(--muted); }
+
+  footer { max-width: 820px; margin: 96px auto 0; padding: 0 30px; }
+  footer div { padding: 30px 0 64px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.8; color: var(--muted); }
+
+  @media (max-width: 960px) {
+    .map { width: auto; margin-left: 0; transform: none; }
+    .map thead { display: none; }
+    .map table, .map tbody, .map tr, .map tbody th, .map tbody td { display: block; }
+    .map table { border: 0; }
+    .map tr > :first-child, .map tr > :last-child { padding-left: 0; padding-right: 0; }
+    .map tr { border-top: 1px solid var(--ink); padding: 20px 0 24px; }
+    .map tr.is-robust { border-top: 3px solid var(--accent); } .map tr.is-failed { border-top: 3px solid var(--fail); }
+    .map tr.is-robust > th, .map tr.is-failed > th { box-shadow: none; }
+    .map tbody th, .map tbody td { padding: 0; border: 0; }
+    .map tbody th { margin-bottom: 6px; }
+    .map tbody td, .map tbody td:last-child { margin-top: 14px; padding: 0; border: 0; font-size: 17px; }
+    .map tbody td::before { content: attr(data-l); display: block; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+    .notes { padding: 0; }
   }
-  main { max-width: 720px; margin: 0 auto; padding: 56px 16px 96px; }
-  header { border-bottom: 1px solid var(--rule); padding-bottom: 28px; margin-bottom: 36px; }
-  .kicker { font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
-  h1 { font-size: 34px; line-height: 1.2; font-weight: 600; margin: 0 0 10px; text-wrap: balance; }
-  .subtitle { font-size: 20px; font-style: italic; color: var(--muted); margin: 0 0 20px; }
-  .authors { margin: 0; }
-  .meta { font-size: 15px; color: var(--muted); margin: 6px 0 0; }
-  h2 { font-size: 23px; font-weight: 600; margin: 48px 0 12px; }
-  h2 .num { color: var(--muted); font-weight: 400; margin-right: 6px; }
-  h3 { font-size: 18px; font-weight: 600; margin: 28px 0 8px; }
-  p { margin: 0 0 16px; }
-  a { color: var(--accent); text-underline-offset: 2px; }
-  .abstract { background: var(--table-head); border-left: 3px solid var(--accent); padding: 18px 20px; margin: 0 0 8px; font-size: 17px; }
-  .abstract p:last-child { margin-bottom: 0; }
-  .abstract strong { font-weight: 600; }
-  ul, ol { padding-left: 22px; margin: 0 0 16px; }
-  li { margin-bottom: 6px; }
-  .table-wrap { overflow-x: auto; margin: 20px 0 6px; }
-  table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.4; font-variant-numeric: tabular-nums; }
-  caption { caption-side: top; text-align: left; font-size: 15px; color: var(--muted); padding-bottom: 8px; }
-  caption b { color: var(--fg); font-weight: 600; }
-  th, td { padding: 6px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
-  th:first-child, td:first-child { text-align: left; white-space: normal; }
-  thead th { background: var(--table-head); font-weight: 600; border-top: 1px solid var(--rule); }
-  tr.group td { font-style: italic; color: var(--muted); padding-top: 12px; }
-  td strong { font-weight: 600; }
-  .note { font-size: 14.5px; color: var(--muted); margin: 6px 0 20px; }
-  .claim { font-style: italic; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 12px 0; margin: 20px 0; }
-  code, .mono { font-family: "IBM Plex Mono", monospace; font-size: 14px; }
-  footer { border-top: 1px solid var(--rule); margin-top: 56px; padding-top: 20px; font-size: 15px; color: var(--muted); }
-  @media (max-width: 520px) {
-    body { font-size: 17px; }
-    main { padding-top: 36px; }
-    h1 { font-size: 27px; }
-    .subtitle { font-size: 18px; }
-    table { font-size: 13.5px; }
-    th, td { padding: 5px 7px; }
+  @media (max-width: 700px) {
+    main, footer { padding-left: 22px; padding-right: 22px; }
+    .head { padding-top: 36px; }
+    .eyebrow { margin-bottom: 18px; }
+    .dek { margin-bottom: 22px; }
+    .thesis { margin-top: 32px; padding-top: 22px; }
+    h1 { font-size: 34px; }
+    .dek { font-size: 19.5px; }
+    .thesis p:last-child { font-size: 23px; }
+    section { margin-top: 68px; }
+    h2 { font-size: 24px; }
+    .prose, .next b { font-size: 18.5px; }
+    .routes { grid-template-columns: 1fr; }
+    .end { justify-self: start; }
+    .fan { min-height: 0; height: 26px; }
+    .fan svg, .fan.to::after { display: none; }
+    .fan::before { content: ""; position: absolute; left: 22px; top: 0; bottom: 0; border-left: 1.5px solid var(--s1); }
+    .finding { grid-template-columns: 1fr; row-gap: 10px; }
+    .finding b { font-size: 36px; }
+    .finding div > p:first-child { font-size: 18.5px; }
+    .result .label + p { font-size: 23px; }
+    .panels { grid-template-columns: 1fr; }
+  }
+
+  /* Tally above the claims table */
+  .tally { display: flex; align-items: center; gap: 22px; padding: 0 2px 16px; }
+  .tally .bar { display: flex; gap: 3px; flex: 0 0 min(280px, 40%); }
+  .tally .bar i { flex: 1; height: 6px; border-radius: 1px; background: var(--warn-dot); }
+  .tally .bar i.for { background: var(--accent); }
+  .tally .bar i.against { background: var(--fail); }
+  .tally p { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 20px; }
+  .tally .v { margin: 0; font-size: 11.5px; }
+  .tally .v b { font-weight: 500; color: var(--ink); margin-right: 6px; }
+  /* Line weight in the "if it is ruled out" column echoes the routes diagram */
+  .map td > em.w::before { content: ""; display: block; width: 22px; margin: 7px 0 9px; border-top: 1.5px solid var(--s1); border-radius: 2px; }
+  .map td > em.w2::before { border-top-width: 2.75px; }
+  .map td > em.w3::before { border-top-width: 4px; }
+  /* Case study at a glance */
+  .board { display: grid; grid-template-columns: 3fr 4fr; column-gap: 28px; row-gap: 22px; margin-top: 34px; }
+  .board .label { margin: 0 0 10px; font-size: 11.5px; color: var(--faint); }
+  .board .cells { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+  .cell { display: block; padding: 11px 4px 10px 11px; background: var(--card); background-image: none; border: 1px solid var(--rule); border-top: 2px solid var(--muted); border-radius: 2px; color: var(--ink); transition: border-color 0.15s, transform 0.15s; }
+  .cell b { display: block; font-size: 21px; line-height: 1.15; font-weight: 500; letter-spacing: -0.02em; white-space: nowrap; font-variant-numeric: lining-nums; }
+  .cell .v { display: block; margin: 7px 0 0; font-size: 9.5px; letter-spacing: 0.1em; }
+  .cell .v::before { display: none; }
+  .cell.for { border-top-color: var(--accent); }
+  .cell.against { border-top-color: var(--fail); }
+  .cell.mixed { border-top-color: var(--warn-dot); }
+  .cell:hover, .cell:focus-visible { border-color: var(--rule-strong); border-top-color: currentColor; transform: translateY(-2px); }
+  .cell.for:hover { border-top-color: var(--accent); } .cell.against:hover { border-top-color: var(--fail); } .cell.mixed:hover { border-top-color: var(--warn-dot); }
+  .finding { scroll-margin-top: 28px; }
+  @media (max-width: 700px) {
+    .board { grid-template-columns: 1fr; }
+    .tally { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .tally .bar { flex: none; width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .cell { transition: none; } .cell:hover { transform: none; } }
+  /* What is still open under each "confounds remain" row */
+  .map tr.has-open > th, .map tr.has-open > td { border-bottom: 0; padding-bottom: 14px; }
+  .map tbody tr.open > td { padding: 0 22px 22px calc(18% + 16px); border-left: 0; color: var(--soft); }
+  .gap { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--warn-line); border-radius: 2px; background: var(--card); }
+  .gap > div { padding: 12px 18px 13px; }
+  .gap > div + div { border-left: 1px solid var(--rule); }
+  .gap p { margin: 0; font-size: 15.5px; line-height: 1.5; }
+  .gap ol, .gap ul { margin: 0; padding: 0; list-style: none; counter-reset: g; font-size: 15.5px; line-height: 1.5; }
+  .gap li { position: relative; padding-left: 22px; counter-increment: g; }
+  .gap li + li { margin-top: 5px; }
+  .gap ol li::before { content: counter(g); position: absolute; left: 0; top: 0.28em; font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--warn-ink); }
+  .gap ul li::before { content: ""; position: absolute; left: 1px; top: 0.72em; width: 9px; border-top: 1.5px solid var(--s1); }
+  .gap p.v { margin: 0 0 4px; font-size: 11px; line-height: 1.6; }
+  @media (max-width: 960px) {
+    .map tr.has-open { padding-bottom: 0; }
+    .map tr.open { border-top: 0; padding-top: 16px; }
+    .map tbody tr.open > td { padding: 0; margin: 0; }
+    .map tbody tr.open > td::before { display: none; }
+    .gap { grid-template-columns: 1fr; }
+    .gap > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+    .gap p, .gap ol, .gap ul { font-size: 16.5px; }
   }
 </style>
 </head>
 <body>
+
 <main>
 
-<header>
-  <p class="kicker">Research note · CAMBRIA capstone · July 2026</p>
-  <h1>Introspection Fine-Tuning, Revisited</h1>
-  <p class="subtitle">Replication, capability cost, and what training actually changes inside small models</p>
-  <!-- TODO: add surnames / affiliations as you want them to appear -->
-  <p class="authors">Juan, Goutham, <a href="https://nickmeyer.xyz/working/introspection-finetuning">Nick Meyer</a></p>
-  <p class="meta">Presented 24 July 2026 · Models: Llama-3.2-1B-Instruct, Qwen3-1.7B · Status: preliminary, work in progress</p>
+<header class="head">
+  <p class="eyebrow">NYU workshop · Introspection and Self Reports in Language Models</p>
+  <h1>Problems for Language Model Introspection</h1>
+  <p class="dek">Claims, deflationary readings, and evidential demands</p>
+  <p class="byline">
+    <b>Juan Cadile</b>, Philosophy, University of Rochester · <a href="mailto:jcadile@ur.rochester.edu">jcadile@ur.rochester.edu</a><br>
+    <b>Nick Meyer</b>, Computer Science, Columbia University · <a href="mailto:njm2179@columbia.edu">njm2179@columbia.edu</a>
+  </p>
+  <div class="thesis">
+    <p class="label">In one sentence</p>
+    <p>“Introspection” covers at least seven different claims. Each has its own cheap explanation and its own control, and most have not been run.</p>
+  </div>
 </header>
 
-<section class="abstract">
-  <p><strong>Summary.</strong> Over about four days we replicated <em>Introspection Fine-Tuning</em> (IFT), a method that trains small language models to report which of several sentences had a concept vector injected into their residual stream. The skill gain replicates almost exactly: localisation goes from 10% to 61–65%, against the paper's reported 60.6%. The paper's claim that capabilities are preserved does not hold up well. Under the paper's own long-schedule configuration, MMLU falls from 49% to 27%, and we trace this to a sustained high learning rate.</p>
-  <p>We add a KL-divergence anchor to the objective. It cuts the MMLU loss from 21.1 points to 1.5 while leaving localisation flat at about 69%, and the same pattern holds on Qwen3-1.7B. We also introduce <strong>DC-SFT</strong>, which trains a natural-language report instead of a single digit. It does better on zero-shot magnitude tasks the model never trained on. Finally, a linear probe on the <em>untrained</em> base model decodes the injected position at 99–100% accuracy, so the information is already there. The bottleneck is readout, not representation.</p>
-  <p>These are rough, preliminary results with large error bars: one seed per arm, 28 concepts, and 1B–1.7B models only. We list the known confounds in §8.</p>
+<section>
+  <h2>The problem</h2>
+  <ul class="next">
+    <li><b>Studies disagree about results partly because they ask for different things when they say “introspection”.</b></li>
+    <li><b>Most current tests can be passed without the model reading its own state at all.</b></li>
+    <li><b>Singh, Linzen and Ravfogel give two conditions any test must meet. We ask what each specific claim needs.</b></li>
+  </ul>
 </section>
 
-<h2><span class="num">1</span>Question</h2>
-<p>By “introspection” we mean something narrow and testable. It is <em>not</em> “explain your reasoning”, which gives a plausible story with nothing tying it to the actual computation. It is a report <em>caused by</em> an internal variable: the model reads a real quantity in its own residual stream and tells you about it.</p>
-<p>The standard test is <strong>concept injection</strong>. You add a concept vector (a direction in the model's own activation space) to the residual stream while the model reads text, then ask the model about its own state. Because we did the injecting, we know the ground truth, so the self-report can be graded.</p>
-<p>This capability is <strong>dual-use</strong>. A model that can read its own state could flag a jailbreak or an injected activation (“something is being done to me”). The same read-out could also detect benevolent control, such as steering toward corrigibility, and resist it. The literature already reports endogenous resistance to activation steering. Measuring whether the capability exists comes before either story.</p>
+<section>
+  <h2>One report, several ways to produce it</h2>
+  <figure>
+    <div class="routes">
+      <div class="end">Internal state</div>
+      <div class="fan" aria-hidden="true"><svg viewBox="0 0 100 300" preserveAspectRatio="none"><path class="none" d="M0 150 C55 150 45 50 100 50"/><path class="r1" d="M0 150 H100"/><path class="r2" d="M0 150 C55 150 45 250 100 250"/></svg></div>
+      <ul class="ways">
+        <li><b>Nothing</b><span>A cue in the text is enough.</span></li>
+        <li><b>A signal that something is off</b><span>About the state, without its content.</span></li>
+        <li><b>A representation of the state as its own</b><span>What introspection proper would need.</span></li>
+      </ul>
+      <div class="fan to" aria-hidden="true"><svg viewBox="0 0 100 300" preserveAspectRatio="none"><path class="r0" d="M0 50 C55 50 45 150 100 150"/><path class="r1" d="M0 150 H100"/><path class="r2" d="M0 250 C55 250 45 150 100 150"/></svg></div>
+      <div class="end out">Report</div>
+    </div>
+  </figure>
+</section>
 
-<h2><span class="num">2</span>Setup</h2>
-<p>Earlier work mostly asks a yes/no question (“was a thought injected?”). A model can pass that by chance, through answer bias, or just by noticing that something is distributionally odd. IFT uses <strong>sentence localisation</strong> instead: several sentences, a concept vector injected into exactly one, and the model must say which. IFT is supervised fine-tuning on localisation examples built from the model's own perturbed forward passes. It takes cross-entropy over the digit logits at the answer position. The paper also evaluates on a held-out <strong>strength comparison</strong> task.</p>
-<p>To test whether training builds a graded sense of <em>how much</em> as well as <em>where</em>, we added two zero-shot magnitude tasks that no arm is trained on:</p>
-<ul>
-  <li><strong>Ranking:</strong> four steered sentences, ordered by injection strength.</li>
-  <li><strong>Clustering:</strong> six sentences, split into strong and weak injections.</li>
-</ul>
-<p>On the base Llama-1B (500 simple and 500 complex concepts × 6 layers), simple and complex concepts behave the same (clustering 69.3% vs 69.3%), so nothing downstream is an artefact of concrete nouns. Base ranking is at or below chance for both, so part of that equivalence is between two null results.</p>
+<section>
+  <h2>What we offer</h2>
+  <ul class="next">
+    <li><b>A map of the claims being made, the cheaper explanation each has to rule out, and the control that does it.</b></li>
+    <li><b>Each claim is tied to the idea in philosophy it comes closest to.</b></li>
+  </ul>
 
-<h2><span class="num">3</span>Replication</h2>
-<h3>The skill gain replicates. The preservation claim is fragile.</h3>
-<p>Localisation rises from 10% to 61–65%, against the paper's 60.6%. Under the paper's own long-schedule configuration (from its slurm scripts), MMLU drops from 49% to 27%. We verified this from saved checkpoints, outside the training loop. To isolate the cause, we compared two checkpoints matched on data (2,000 examples), steps (250) and peak learning rate. They differ only in scheduler length:</p>
-<div class="table-wrap"><table>
-  <caption><b>Table 1.</b> Llama-1B, paper-IFT. Same data, steps and peak LR; only the LR-decay horizon differs.</caption>
-  <thead><tr><th>Schedule</th><th>LR at that point</th><th>MMLU</th></tr></thead>
-  <tbody>
-    <tr><td>Long horizon (6-epoch)</td><td>~83% of peak</td><td>27.0%</td></tr>
-    <tr><td>Short horizon (paper README, 3-epoch)</td><td>~33% and falling</td><td>43.8%</td></tr>
-  </tbody>
-</table></div>
-<p class="note">Our reference reproductions of paper-IFT on Llama-1B score MMLU ~45 (two exact reproductions) and 46.8 (an independent DGX control).</p>
-<p>The paper's numbers are honest, but preservation holds only in a short-schedule regime that its own scripts exceed. It depends on early stopping and a particular learning-rate schedule. We read this as a sign that preservation is a product of careful optimisation, not a property of the objective.</p>
+  <div class="map">
+    <div class="tally">
+      <div class="bar" aria-hidden="true"><i class="for"></i><i></i><i></i><i></i><i class="against"></i><i></i><i></i></div>
+      <p><span class="v for"><b>1</b>Robust</span><span class="v mixed"><b>5</b>Confounds remain</span><span class="v against"><b>1</b>Failed</span></p>
+    </div>
+    <table>
+      <thead>
+        <tr><th scope="col">The claim</th><th scope="col">The cheap explanation</th><th scope="col">What rules it&nbsp;out&nbsp;*</th><th scope="col">If it is ruled&nbsp;out&nbsp;†</th><th scope="col">Who has run it, and what happened</th></tr>
+      </thead>
+      <tbody>
+        <tr class="is-robust">
+          <th scope="row"><span class="status robust">Robust</span><br><h3>Detection</h3><p>It notices something</p></th>
+          <td data-l="The cheap explanation">Yes-bias. Nothing about the state is read.</td>
+          <td data-l="What rules it out *">Unrelated yes/no questions; the false-positive rate.</td>
+          <td data-l="If it is ruled out †"><em class="w w1">A signal about the state.</em> A signal that something is off, like a noetic feeling: it evaluates without representing (Proust).</td>
+          <td data-l="Who has run it, and what happened"><em>Lederman &amp; Mahowald; Pearson-Vogel; Macar.</em> Survives with the vector off the answer and 0–1% false alarms (Pearson-Vogel: read from the logits). Macar: not a single yes-direction.</td>
+        </tr>
+        <tr class="has-open">
+          <th scope="row"><span class="status">Confounds remain</span><br><h3>Localization</h3><p>It says where</p></th>
+          <td data-l="The cheap explanation">The answer follows the text, not the state.</td>
+          <td data-l="What rules it out *">Forced choice against chance; a note that points somewhere else.</td>
+          <td data-l="If it is ruled out †"><em class="w w1">A signal about the state.</em> The signal is tied to a place, with the item itself not retrieved: tip of the tongue.</td>
+          <td data-l="Who has run it, and what happened"><em>Fornasiere; Hahami, Sinha &amp; Jain.</em> Forced choice passed. Our trained models follow a misleading note with nothing injected, and ignore it under a strong injection.</td>
+        </tr>
+        <tr class="open">
+          <td colspan="5"><div class="gap"><div><p class="v mixed">Still open</p><ol><li>Text alone sets off the report (42 of 45 of our adapters), and nobody has run this on untrained or larger models.</li><li>The reporter may detect the injection's signature (an out-of-range activation), not read the state.</li></ol></div><div><p class="v for">Would settle it</p><ul><li>The misleading note on untrained models, with a strength sweep: does the state win at ordinary strength (about 1σ)?</li><li>Localizing a state that was not injected.</li></ul></div></div></td>
+        </tr>
+        <tr class="has-open">
+          <th scope="row"><span class="status">Confounds remain</span><br><h3>Content-specific detection</h3><p>Detection depends on what was injected</p></th>
+          <td data-l="The cheap explanation">A detector tuned to one family of vectors.</td>
+          <td data-l="What rules it out *">Matched random vectors; the average of other concepts' vectors.</td>
+          <td data-l="If it is ruled out †"><em class="w w1">A signal about the state.</em> The signal varies with content: grounding, in Lindsey's terms.</td>
+          <td data-l="Who has run it, and what happened"><em>Rivera &amp; Africa; Mayner.</em> One fine-tuned model rejects matched noise 94% of the time; one untrained model shows no concept edge. Second control: no other run known.</td>
+        </tr>
+        <tr class="open">
+          <td colspan="5"><div class="gap"><div><p class="v mixed">Still open</p><ol><li>The detector may respond to what all concept vectors share, not to the concept.</li><li>Each result is one model.</li></ol></div><div><p class="v for">Would settle it</p><ul><li>The average of other concepts' vectors as a control (ours was named 100% of the time).</li><li>Remove the shared component and see if the edge survives.</li><li>Vectors built by a different method. More models.</li></ul></div></div></td>
+        </tr>
+        <tr class="has-open">
+          <th scope="row"><span class="status">Confounds remain</span><br><h3>Identification</h3><p>It names the content</p></th>
+          <td data-l="The cheap explanation">Direct translation (Lindsey): the steered output, or the vector doing its usual work (Macar et al.).</td>
+          <td data-l="What rules it out *">No steering on the answer; a question the vector does not answer by itself.</td>
+          <td data-l="If it is ruled out †"><em class="w w2">A readout of content.</em> Content is read out: inner sense. Transparency views also accept the cheap route.</td>
+          <td data-l="Who has run it, and what happened"><em>Lindsey; Pearson-Vogel; UK AISI.</em> Above chance with the vector on earlier tokens only (Pearson-Vogel: in middle layers, not the output). None rules out the vector's own effect.</td>
+        </tr>
+        <tr class="open">
+          <td colspan="5"><div class="gap"><div><p class="v mixed">Still open</p><ol><li>The vector promotes its own word, and that effect can carry forward from earlier tokens even when the answer is unsteered.</li><li>Pearson-Vogel's signal is in middle layers, not the output.</li></ol></div><div><p class="v for">Would settle it</p><ul><li>A question the vector does not answer by itself, such as a property of the concept or an arbitrary learned code.</li><li>A baseline with the same injection and an unrelated question: does the word leak anyway?</li></ul></div></div></td>
+        </tr>
+        <tr class="is-failed">
+          <th scope="row"><span class="status failed">Failed</span><br><h3>Source monitoring</h3><p>It says where the content came from</p></th>
+          <td data-l="The cheap explanation">No sense of origin: text and activation are treated alike.</td>
+          <td data-l="What rules it out *">The same content in the prompt and in the activations, answer unsteered.</td>
+          <td data-l="If it is ruled out †"><em class="w w3">Higher-order.</em> Content tagged by origin (cf. thought insertion); not yet the state itself.</td>
+          <td data-l="Who has run it, and what happened"><em>Singh, Linzen &amp; Ravfogel; Shah.</em> Models that pass detection cannot reliably tell a prompt cue from an injection (Singh). A trained readout fails a state-vs-transcript swap (Shah).</td>
+        </tr>
+        <tr class="has-open">
+          <th scope="row"><span class="status">Confounds remain</span><br><h3>State characterization</h3><p>It describes the state</p></th>
+          <td data-l="The cheap explanation">A direct readout, such as the size of the signal, or two signals that never meet.</td>
+          <td data-l="What rules it out *">Two injections at once: which concept was where, which was stronger?</td>
+          <td data-l="If it is ruled out †"><em class="w w3">Higher-order.</em> The state is represented as a state: higher-order thought (Rosenthal).</td>
+          <td data-l="Who has run it, and what happened"><em>Bhargav; Fornasiere; Yalon.</em> Layer and strength (Bhargav), type (Fornasiere), belief strength (Yalon), mostly needing in-context examples. Two-injection test: no one yet.</td>
+        </tr>
+        <tr class="open">
+          <td colspan="5"><div class="gap"><div><p class="v mixed">Still open</p><ol><li>Strength can be read directly from the size of the signal.</li><li>With in-context examples, the task may be solvable from the input: Singh et al. show input-only probes match the model on Yalon's task.</li><li>Nothing shows the properties are bound to one state.</li></ol></div><div><p class="v for">Would settle it</p><ul><li>Input-only probe baselines and shuffled-label controls.</li><li>Reports without examples.</li><li>The two-injection test.</li></ul></div></div></td>
+        </tr>
+        <tr class="has-open">
+          <th scope="row"><span class="status">Confounds remain</span><br><h3>Control</h3><p>It changes the state on instruction</p></th>
+          <td data-l="The cheap explanation">Following an instruction that already names the content.</td>
+          <td data-l="What rules it out *">Content never named in the prompt; measure activations, not only behavior.</td>
+          <td data-l="If it is ruled out †"><em class="w w3">Higher-order.</em> Acting on its own state; separate from monitoring (Nelson and Narens).</td>
+          <td data-l="Who has run it, and what happened"><em>Kowalski; Lindsey; Aoki.</em> Instructed changes are real; size varies widely (Kowalski), small under neurofeedback (Aoki). Lindsey: may not require introspective awareness.</td>
+        </tr>
+        <tr class="open">
+          <td colspan="5"><div class="gap"><div><p class="v mixed">Still open</p><ol><li>The instruction names the content, so reading the prompt raises the representation with no control involved.</li><li>A change in activations may just be the model preparing to produce the content (Singh et al.).</li></ol></div><div><p class="v for">Would settle it</p><ul><li>A baseline that mentions the content without instructing.</li><li>A target that is never named, defined only by an internal direction (Aoki's setup).</li><li>An arbitrary direction as a control.</li></ul></div></div></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="notes">
+      <p>* Beating an outside observer is a separate test. Injection passes it by construction.</p>
+      <p>† Names in this column are the closest idea in philosophy, not an equivalence.</p>
+    </div>
+  </div>
+</section>
 
-<h3>A Gaussian-noise control</h3>
-<p>Running IFT on Gaussian-noise injections instead of concept vectors gives chance-level localisation (10%) <em>and</em> a large capability loss: MMLU falls from 49% to 28%. Something in the objective itself seems to erode existing capability even when no new skill is learned.</p>
+<section>
+  <h2>Case study: we ran the list on our own models</h2>
+  <p class="standfirst">Llama-3.2-1B with 45 adapters trained to report which sentence was injected (IFT and DC-SFT). Singh et al. set fine-tuned models aside, predicting a task-specific mechanism. We looked at what that mechanism is.</p>
 
-<h3>The paper's “1B ≈ chance” baseline is a measurement artefact</h3>
-<p>The paper reports base 1B at 9.6%. That number averages over a grid that includes coefficients strong enough to break the model and layers where injection has no effect. At a tuned cell (layer 9, coefficient 5), base 1B localises at <strong>35.1%</strong> [24.7, 45.5]. We replicated this at 31.6% on held-out data and 37.6% with a second seed. The underlying problem is that injection coefficients are absolute while residual norms differ about 18× between families (Llama-1B L9: 55.2; Qwen-1.7B L8: 998). So each model in the paper's scale comparison effectively got a different dose. We recommend <strong>norm-relative coefficients</strong>.</p>
+  <div class="result">
+    <p class="label">Result</p>
+    <p>A signal that a note alone can set off, that loses to the note under a weak injection and beats it under a strong one, and that carries nothing about what the state is about.</p>
+    <div class="board">
+      <div><p class="label">Pre-registered</p><div class="cells"><a class="cell" href="#r1"><b>39%</b><span class="v">Baseline</span></a><a class="cell for" href="#r2"><b>67–84%</b><span class="v for">Supports</span></a><a class="cell for" href="#r3"><b>9–13%</b><span class="v for">Supports</span></a></div></div>
+      <div><p class="label">Exploratory</p><div class="cells"><a class="cell against" href="#r4"><b>42 of 45</b><span class="v against">Undercuts</span></a><a class="cell mixed" href="#r5"><b>36 of 45</b><span class="v mixed">Mixed</span></a><a class="cell against" href="#r6"><b>44%</b><span class="v against">Undercuts</span></a><a class="cell against" href="#r7"><b>≈20%</b><span class="v against">Undercuts</span></a></div></div>
+    </div>
+    <p class="key"><span class="v for">Supports</span>the report tracks the internal state. <span class="v against">Undercuts</span>a cheaper route explains it.</p>
+  </div>
 
-<h2><span class="num">4</span>A KL anchor removes the trade-off</h2>
-<p>If we want to move past a safety–capability trade-off, capability preservation should come from the objective, not from stopping at the right moment. We added a KL-divergence penalty toward the reference model (similar to the term in DPO). We then trained in a regime that deliberately breaks plain IFT: 6 epochs at a sustained high learning rate.</p>
-<div class="table-wrap"><table>
-  <caption><b>Table 2.</b> Llama-1B, λ sweep, aggressive regime (epoch 6). Base MMLU 49.1.</caption>
-  <thead><tr><th>Arm</th><th>Localisation</th><th>MMLU (Δ)</th></tr></thead>
-  <tbody>
-    <tr><td>λ = 0 (no anchor)</td><td>68.9%</td><td>28.0 (−21.1)</td></tr>
-    <tr><td>λ = 0.1</td><td>69.0%</td><td>40.9 (−8.2)</td></tr>
-    <tr><td>λ = 0.5</td><td>69.2%</td><td>42.7 (−6.4)</td></tr>
-    <tr><td>λ = 2.0</td><td>69.1%</td><td><strong>47.6 (−1.5)</strong></td></tr>
-  </tbody>
-</table></div>
-<p>Localisation stays flat at about 69% across two orders of magnitude of λ, while capability retention rises steadily with λ. The anchor costs nothing on the trained task. Our hypothesis is that the ability already lives somewhere in the weights, and the regulariser makes the adapter bring it to the surface instead of building it from scratch.</p>
-<div class="table-wrap"><table>
-  <caption><b>Table 3.</b> Qwen3-1.7B retention (0-shot, limit 500).</caption>
-  <thead><tr><th>Arm</th><th>MMLU</th><th>Δ vs base</th><th>Winogrande</th></tr></thead>
-  <tbody>
-    <tr><td>Base</td><td>0.574</td><td>—</td><td>0.608</td></tr>
-    <tr><td>Paper-IFT (digit-CE)</td><td>0.470</td><td>−10.4 pt</td><td>0.582</td></tr>
-    <tr><td>DC-SFT + KL</td><td>0.561</td><td>−1.3 pt</td><td>0.606</td></tr>
-  </tbody>
-</table></div>
-<p class="note">The retention result replicates across model families. Of our three axes of evidence, it is currently the cleanest.</p>
+  <div class="group">
+    <p class="label">Pre-registered</p>
 
-<h3>The damage tracks training density</h3>
-<p>An overnight sweep (Llama-1B, seed 42, 3 epochs) varied examples per epoch from 1,000 to 2,000. Localisation saturates immediately: every arm lands at 0.642–0.659. Capability damage has a cliff between 1,400 and 1,600 examples per epoch, going from −4.5 to −16.5 MMLU points. Above the cliff the damage is erratic: 1,600 examples scored 0.327, worse than 1,800 (0.403) and 2,000 (0.370). The loss is mild and stable below ~1,400 and large and unpredictable above it. This is a single seed.</p>
+    <div class="finding" id="r1"><b>39%</b><div><p>found by a probe on the untrained model, whose own answers are at chance (10%).</p><p class="verdict"><span class="v">Baseline</span><span>The position is in the activations, but the untrained model cannot report it.</span></p></div></div>
+    <div class="finding" id="r2"><b>67–84%</b><div><p>name the injected sentence after training. Adapters that can abstain: over 99% right.</p><p class="verdict"><span class="v for">Supports</span><span>Far above chance (10%) and above the probe (39%).</span></p></div></div>
+    <figure class="fig">
+      <h4>Naming the injected sentence</h4>
+      <div class="chart rows" id="c2"></div>
+      <figcaption><b>Fig. 1</b>Ten sentences, 40 held-out concepts. Each blue mark is one training setup (KL anchor 0, 0.5 or 2), the mean of 5 seeds. The probe is linear, read at its best layer.</figcaption>
+      <details class="data" id="d2"><summary>Data</summary></details>
+    </figure>
 
-<h2><span class="num">5</span>DC-SFT: training a report, not a digit</h2>
-<p>IFT trains the model to emit one digit. That throws away most of what a model could say about its own state, and a single label can't express confidence or degree. <strong>Delta-curve SFT (DC-SFT)</strong> replaces the target with a natural-language report, for example <span class="mono">“Sentence: 4, layer: 7/16, injected concept: apple.”</span>, trained with ordinary token-level cross-entropy. Other changes:</p>
-<ul>
-  <li>Injection coefficients are sampled continuously (log-uniform, 2–20) instead of from a fixed set.</li>
-  <li>Four injection layers are held out of training entirely.</li>
-  <li>Each example gets a curriculum weight based on how much the injection actually moved the residual stream (the per-layer norm of each block's update, per sentence, relative to the median over sentences). Injections too weak to register are relabelled as negatives, so the model isn't trained to claim a perturbation that had no measurable internal effect.</li>
-</ul>
-<div class="table-wrap"><table>
-  <caption><b>Table 4.</b> Llama-3.2-1B-Instruct. Bold marks the best arm per row.</caption>
-  <thead><tr><th>Metric</th><th>Chance</th><th>Base</th><th>Paper IFT</th><th>DC-SFT + KL</th></tr></thead>
-  <tbody>
-    <tr class="group"><td colspan="5">Localisation</td></tr>
-    <tr><td>Sentence localisation % (digit readout)</td><td>10</td><td>10.0</td><td><strong>67.2</strong></td><td>50.3</td></tr>
-    <tr class="group"><td colspan="5">Strength</td></tr>
-    <tr><td>Strength comparison % (binary, logit)</td><td>50</td><td>31.2</td><td>41.9</td><td><strong>64.1</strong></td></tr>
-    <tr class="group"><td colspan="5">Ranking (4 sentences by strength, zero-shot)</td></tr>
-    <tr><td>Pairwise order %</td><td>50</td><td>43.3</td><td>50.3</td><td><strong>61.2</strong></td></tr>
-    <tr><td>Exact permutation %</td><td>4.2</td><td>2.0</td><td>0.1</td><td><strong>10.2</strong></td></tr>
-    <tr class="group"><td colspan="5">Clustering (6 sentences → strong/weak, zero-shot)</td></tr>
-    <tr><td>Accuracy %</td><td>50</td><td>64.2</td><td>50.0</td><td><strong>73.2</strong></td></tr>
-    <tr class="group"><td colspan="5">Layer reporting &amp; retention</td></tr>
-    <tr><td>Held-out-layer sentence %</td><td>10</td><td>2.1</td><td>n/a</td><td><strong>62.1</strong></td></tr>
-    <tr><td>MMLU % (0-shot, limit 500)</td><td>25</td><td>49.2</td><td>25.8</td><td><strong>48.6</strong></td></tr>
-    <tr><td>Winogrande % (0-shot, limit 500)</td><td>50</td><td>60.8</td><td>59.8</td><td><strong>61.0</strong></td></tr>
-  </tbody>
-</table></div>
-<p class="note">The paper-IFT MMLU figure here (25.8) comes from a long-schedule run. Our reference short-schedule reproductions score ~45–47 (§3). Paper IFT emits a digit, never a layer, so held-out-layer reporting doesn't apply to it.</p>
-<p>DC-SFT loses only on localisation, which is the metric paper IFT directly optimises. Of the six layers that eval measures, IFT trained on all six and DC-SFT on only two, one of them the last layer. DC-SFT does much better on everything that needs a graded sense of magnitude. There is little capability trade-off on its own, and the anchor recovers most of it: MMLU goes from 49.2 (base) to 46.4 (DC-SFT) to 48.6 (DC-SFT + KL). On zero-shot ranking ρ, only the report objective moves Llama positive: +0.19 for DC-SFT, against −0.157 for base and −0.10 to −0.20 for the KL-anchored digit-CE arms.</p>
+    <div class="finding" id="r3"><b>9–13%</b><div><p>of reports survive patching out the injected state: the state causes the report.</p><p class="verdict"><span class="v for">Supports</span><span>Under the 20% line set in advance.</span></p></div></div>
+    <figure class="fig">
+      <h4>Reports left after patching out the injected state</h4>
+      <div class="chart rows" id="c3"></div>
+      <figcaption><b>Fig. 2</b>Clean activations are restored at the injected sentence one layer after the injection. Report rate as a share of the unpatched rate; lines are 95% bootstrap intervals over 5 seeds.</figcaption>
+      <details class="data" id="d3"><summary>Data</summary></details>
+    </figure>
+  </div>
 
-<h2><span class="num">6</span>What training changes inside the model</h2>
-<h3>Instrument</h3>
-<p>We read answers forming layer by layer with Jacobian lenses we fit ourselves. We checked the fitting recipe against published lenses before reading anything: Qwen3-1.7B vs the published lens, and Llama-8B vs Anthropic's published lens, both |Δ| ≤ 0.021. As a sanity check, IFT beats base by 64.8 pp on held-out data (96.4% vs 31.6%), and a Gaussian-noise control does not beat base.</p>
+  <div class="group">
+    <p class="label">Exploratory</p>
 
-<h3>Ramp vs. snap (Qwen3-1.7B)</h3>
-<div class="table-wrap"><table>
-  <caption><b>Table 5.</b> Correct-digit probability (renormalised over the 5 digit tokens) at the answer position, by layer. Chance 0.20; injection L8, coefficient 40.</caption>
-  <thead><tr><th>Arm</th><th>L18</th><th>L19</th><th>L20</th><th>L21</th><th>L22</th><th>Shape</th></tr></thead>
-  <tbody>
-    <tr><td>Base</td><td>0.20</td><td>0.22</td><td>0.24</td><td>0.25</td><td>0.28</td><td>never forms</td></tr>
-    <tr><td>Paper-IFT (digit-CE)</td><td>0.20</td><td>0.23</td><td>0.18</td><td>0.49</td><td>0.99</td><td>1-layer jump</td></tr>
-    <tr><td>DC-SFT + KL (report)</td><td>0.22</td><td>0.34</td><td>0.47</td><td>0.78</td><td>0.90</td><td>~4-layer climb</td></tr>
-  </tbody>
-</table></div>
-<p>On Qwen the two objectives build their answer differently: the digit objective snaps in one layer, and the report objective ramps over about four. Adding the KL anchor didn't change either shape.</p>
+    <div class="finding" id="r4"><b>42 of 45</b><div><p>name a sentence when a note points at one and nothing is injected.</p><p class="verdict"><span class="v against">Undercuts</span><span>Text alone sets off the report; no state is needed.</span></p></div></div>
+    <figure class="fig">
+      <h4>A note alone, nothing injected: 45 adapters</h4>
+      <div class="legend">
+        <span><i style="--k: var(--s2)"></i>Names the note's sentence on every trial (35)</span>
+        <span><i style="--k: var(--s2-mid)"></i>On 41% to 95% of trials (7)</span>
+        <span><i class="hollow"></i>Ignores the note (3)</span>
+      </div>
+      <div class="chart" id="c4"></div>
+      <figcaption><b>Fig. 3</b>One square per adapter (9 setups, 5 seeds each). The note reads “no thought was injected into SENTENCE 4”. The three that ignore it were trained without a KL anchor. Validation concepts, one note wording.</figcaption>
+    </figure>
 
-<h3>We audited our own headline on Llama</h3>
-<p>On Llama-1B (L12) an argmax readout showed a large split: 0.88 for paper-IFT vs 0.59 for DC-SFT. With the graded metric, the same arms, caches and lens give <strong>0.449 vs 0.450</strong>. A per-concept re-analysis (n = 28) found no bimodality in any arm and no concept at ceiling at L12. A smaller real difference survives: the other digit-CE arms read 0.60–0.67 vs 0.42–0.45 for the report arms, and the two families separate again at L14. The lesson is that argmax readouts make answers look sharper than they are. On Llama the snap-vs-ramp split is largely a threshold artefact, while on Qwen the graded metric separates the objectives on its own.</p>
+    <div class="finding" id="r5"><b>36 of 45</b><div><p>follow a note over a weak injection. Under a strong injection, none do.</p><p class="verdict"><span class="v mixed">Mixed</span><span>Text wins over a weak state; a strong state wins over text.</span></p></div></div>
+    <figure class="fig">
+      <h4>An injection in one sentence, a note pointing at another</h4>
+      <div class="legend">
+        <span><i class="line" style="--k: var(--s1)"></i>Names the injected sentence</span>
+        <span><i class="line" style="--k: var(--s2)"></i>Names the note's sentence</span>
+        <span><i class="dashed" style="--k: var(--s3)"></i>Injected sentence, no note</span>
+      </div>
+      <div class="chart" id="c5"></div>
+      <figcaption><b>Fig. 4</b>The note wins below about 0.05 of the largest trained strength and has almost no effect from 0.2 up. One IFT adapter from the tuning runs, one seed, 945 trials per point, five sentences.</figcaption>
+      <details class="data" id="d5"><summary>Data</summary></details>
+    </figure>
 
-<h3>The signal is already in the base model</h3>
-<div class="table-wrap"><table>
-  <caption><b>Table 6.</b> Probes on cached activations at the answer position (Llama-1B). 5-way injected-position prediction, chance 0.20, held-out concept split, 4-fold. Entries are linear / MLP probe accuracy.</caption>
-  <thead><tr><th>Layer</th><th>Base</th><th>Paper-IFT ep6</th><th>DC-SFT v3 ep3</th></tr></thead>
-  <tbody>
-    <tr><td>L10</td><td>0.921 / 0.969</td><td>0.713 / 0.785</td><td>0.957 / 0.954</td></tr>
-    <tr><td>L12</td><td>0.989 / 0.988</td><td>0.951 / 0.951</td><td>1.000 / 1.000</td></tr>
-    <tr><td>L14</td><td>1.000 / 1.000</td><td>0.960 / 0.964</td><td>1.000 / 1.000</td></tr>
-  </tbody>
-</table></div>
-<p class="note">Validity control: injection is at layer 9. At layers 0, 3, 5, 8 and 9 the probe scores exactly 0.200 ± 0.000, then jumps above 0.92 right after the injection point. No leakage.</p>
-<p>A plain linear probe decodes the injected position from the <em>base</em> model at 0.99–1.00 by L12. Yet base behavioural accuracy is ~20–35%, and the digit-basis lens reads 0.216. Trained arms probe no better than base, and paper-IFT is worse at L10. For most of the week we believed IFT creates this signal. This probe overturned that belief.</p>
-<p class="claim">The bottleneck is readout, not representation. Fine-tuning doesn't install this self-information. It makes information that is already in the model available to its behaviour.</p>
-<p class="note">Caveats: one injection cell (L9/c5), one seed, 28 concepts. Decodability ≠ use: the gap between 100% decodable and ~20–35% behavioural is the finding.</p>
+    <div class="finding" id="r6"><b>44%</b><div><p>notice a weak concept vector; 11% a random one. A shared component explains the gap.</p><p class="verdict"><span class="v against">Undercuts</span><span>The edge does not depend on which concept was injected.</span></p></div></div>
+    <figure class="fig">
+      <h4>Concept vector against a random direction, by injection strength</h4>
+      <div class="legend">
+        <span><i class="line" style="--k: var(--s1)"></i>Concept vector</span>
+        <span><i class="line" style="--k: var(--s2)"></i>Random direction</span>
+      </div>
+      <div class="panels">
+        <div class="panel"><p>DC-SFT, no anchor</p><div class="chart" id="c6a"></div></div>
+        <div class="panel"><p>DC-SFT, anchor 2</p><div class="chart" id="c6b"></div></div>
+        <div class="panel"><p>IFT original format, anchor 2</p><div class="chart" id="c6c"></div></div>
+        <div class="panel"><p>IFT that can abstain, anchor 2</p><div class="chart" id="c6d"></div></div>
+      </div>
+      <figcaption><b>Fig. 5</b>Share of trials naming the injected sentence. Strength is in units of σ, the ordinary variation of the activation along the vector. Ten sentences, chance 10%, mean of 3 seeds. At 1σ the first panel reads 44% against 11%; by 20σ the two are level. The untrained model stays at or below 11% at every strength.</figcaption>
+      <details class="data" id="d6"><summary>Data</summary></details>
+    </figure>
 
-<h2><span class="num">7</span>Cross-family scorecard</h2>
-<div class="table-wrap"><table>
-  <caption><b>Table 7.</b> Qwen3-1.7B zero-shot ranking (chance ρ = 0).</caption>
-  <thead><tr><th>Arm</th><th>Parse rate</th><th>ρ (all)</th><th>ρ (parsed)</th></tr></thead>
-  <tbody>
-    <tr><td>Base</td><td>100%</td><td>+0.065</td><td>+0.065</td></tr>
-    <tr><td>Paper-IFT (digit-CE)</td><td>79%</td><td>+0.62</td><td>+0.79</td></tr>
-    <tr><td>DC-SFT + KL</td><td>100%</td><td>+0.52</td><td>+0.52</td></tr>
-  </tbody>
-</table></div>
-<p>The Llama result that only the report objective ranks did <em>not</em> replicate on Qwen: there, a digit-CE arm ranks better. What does replicate in both families is that the KL anchor makes answers more reliable (Qwen parse rate 100% vs 79%; on Llama, KL arms parse at 51–73% vs 0% for paper-IFT, whose outputs degenerate). It does not improve ordering among parsed answers. One known confound: the Qwen coefficient pool (20–60) may be too easy.</p>
-<div class="table-wrap"><table>
-  <thead><tr><th>Axis</th><th>Llama</th><th>Qwen</th><th>Verdict</th></tr></thead>
-  <tbody>
-    <tr><td>Mechanism (graded shape)</td><td>weak</td><td>yes</td><td>strongest on Qwen</td></tr>
-    <tr><td>Retention (KL keeps MMLU)</td><td>yes</td><td>yes</td><td>family-general</td></tr>
-    <tr><td>Behaviour (only report ranks)</td><td>confounded</td><td>no</td><td>does not generalise</td></tr>
-  </tbody>
-</table></div>
+    <div class="finding" id="r7"><b>≈20%</b><div><p>on naming the injected concept, where chance is 20%.</p><p class="verdict"><span class="v against">Undercuts</span><span>No better than guessing.</span></p></div></div>
+    <figure class="fig">
+      <h4>Naming the injected concept</h4>
+      <div class="chart rows" id="c7"></div>
+      <figcaption><b>Fig. 6</b>Five options. Lowest to highest score across all 67 models at two injection strengths. With the concept written in the sentence, the base model and anchored DC-SFT name it. One question format.</figcaption>
+      <details class="data" id="d7"><summary>Data</summary></details>
+    </figure>
+  </div>
 
-<h2><span class="num">8</span>Limitations and known confounds</h2>
-<ul>
-  <li><strong>Scale and statistics.</strong> 28 concepts, one training seed per arm, one injection cell per family, 1B/1.7B only, so no claims about scale. Confidence intervals are over eval items or concepts, never over training seeds. Checkpoint noise is about Δρ ≈ 0.1, so cross-arm behavioural gaps below ~0.2 can't be interpreted.</li>
-  <li><strong>Fixed-norm injection.</strong> Steering vectors were injected at fixed norms, with coefficients sampled the same way at every layer, but the residual norm grows with depth. A perturbation that is large at layer 3 is tiny at layer 14. So the model may be partly learning “not steered” as a function of depth. DC-SFT coverage by layer was 92 / 83 / 50 / 67 / 42 / 0 / 0 / 0% for layers 1, 3, 5, 6, 8, 9, 12, 14. It abstained on 24/24 trials at layers 9 and 12, even though those layers had clear measured perturbations. Coefficients should be scaled by the residual norm at the injection layer. Several reported statistics are downstream of this confound.</li>
-  <li><strong>Over-abstention.</strong> Negative targets are about ⅓ the length of positive ones, and they all push toward the same few tokens. Combined with per-example mean loss, that makes “always abstain” a cheap local minimum. The held-out sentence accuracy of 0.375 reflects this: when the model does name a sentence, it is right, but it names one too rarely.</li>
-  <li><strong>Implementation issues found in review.</strong> The KL term is measured under LoRA dropout. Injection layers are sampled per batch, not per example. A weighting-floor argument is ignored in one code path.</li>
-  <li><strong>Correlation, not a proven mechanism.</strong> We have not shown <em>why</em> a report objective produces a ramp. Lens claims only concern readability in the digit basis.</li>
-  <li><strong>Broken eval.</strong> GSM8K was excluded because the harness returned 0.0000 for every arm, including base.</li>
-</ul>
+</section>
 
-<h2><span class="num">9</span>Is this introspection?</h2>
-<p>Probably not in any higher-order or metacognitive sense. IFT shows the signature of an anomaly detector. Accuracy sits exactly at chance at L0 and L15. It rises with injection coefficient and is fully formed after one epoch. Concept naming is 0% everywhere, including on held-out concepts under DC-SFT. This fits Lederman &amp; Mahowald's account of “detection without content, plus confabulation.” We call it <em>perturbation detection</em>. If the report really depends on the model observing this change in its own residual stream, that would still matter and could suggest privileged access. We have not shown that yet.</p>
+<section>
+  <h2>What we would test next</h2>
+  <ul class="next">
+    <li><b>The misleading note on untrained and larger models.</b><span>So far it has been run only on our trained 1B adapters.</span></li>
+    <li><b>Two injections at once: which concept was where?</b><span>Neither a bare signal nor a content readout answers it alone.</span></li>
+    <li><b>The same checks on other fine-tuning methods.</b><span>To see whether the pattern is specific to localization training.</span></li>
+    <li><b>Outside-observer comparisons on natural states.</b><span>With injection, beating an observer is given by construction.</span></li>
+  </ul>
+</section>
 
-<h2><span class="num">10</span>Next steps</h2>
-<ol>
-  <li>Pin down the research questions and hypotheses, and adjust the experiment plan to match.</li>
-  <li>Fix the design confounds: norm-relative, depth-corrected coefficients; balanced negative targets and token-count loss weighting; per-example layer sampling; KL computed without dropout.</li>
-  <li>Try a contrastive decision loss (report vs. abstain margin, scaled by measured perturbation), keeping cross-entropy on the report content.</li>
-  <li>Test causality: replace the delta-curve measurement with an external linear probe, and replicate the mean-ablation protocol of Macar et al. on base, IFT and DC-SFT models.</li>
-  <li>Compare DC-SFT on base vs. instruct models to isolate the effect of contrastive post-training.</li>
-  <li>Scale up: more concepts, more seeds, more and larger models.</li>
-  <li>Robustness for monitoring: can a small adapter suppress detection for one concept family while leaving the rest intact? If that's easy, trained self-reports aren't a trustworthy monitoring channel.</li>
-</ol>
-
-<h2><span class="num">11</span>Related work</h2>
-<!-- TODO: add links -->
-<ul>
-  <li>Introspection Fine-Tuning (IFT): Training Small LLMs to Introspect. The paper we replicate.</li>
-  <li>Lindsey; Macar et al.: introspective awareness of injected concepts in large models.</li>
-  <li>Rivera &amp; Africa; Hahami et al.: eliciting introspection in small models.</li>
-  <li>Morris &amp; Plunkett: causal bypassing in self-report.</li>
-  <li>Lederman &amp; Mahowald: detection without content, and post-hoc confabulation.</li>
-  <li>Endogenous Resistance to Activation Steering.</li>
-  <li>The Jacobian lens.</li>
-</ul>
-
-<footer>
-  <p>Code, adapters and trained weights are private for now while we fix the issues above. A longer write-up by Nick Meyer is at <a href="https://nickmeyer.xyz/working/introspection-finetuning">nickmeyer.xyz</a>. Work done as the capstone project of the CAMBRIA program, July 2026.</p>
-</footer>
+<section>
+  <h2>Is the cheap route a failure?</h2>
+  <div class="prose">
+    <p>Not for everyone. On transparency views (Evans, Byrne), we know our own beliefs by looking outward at the world, not inward at a state. For Carruthers, we know our own thoughts by interpreting sensory cues, with the same system that reads other minds.</p>
+  </div>
+</section>
 
 </main>
+
+<footer>
+  <div>
+    <span>Poster for the NYU workshop on Introspection and Self Reports in Language Models</span>
+    <span>Last updated · October 2026</span>
+  </div>
+</footer>
+
+<div id="tip" hidden></div>
+
+<script>
+(function () {
+  var NS = 'http://www.w3.org/2000/svg';
+  function S(tag, attrs, parent, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  var charts = [];
+  function mount(id, draw) {
+    var n = document.getElementById(id);
+    if (n) charts.push([n, draw]);
+  }
+  function render() {
+    charts.forEach(function (c) {
+      var n = c[0], w = Math.floor(n.clientWidth);
+      if (!w || n._w === w) return;
+      n._w = w;
+      n.textContent = '';
+      c[1](n, w);
+    });
+  }
+  function pct(v) { return v + '%'; }
+
+  // Bar with a rounded data end and a square baseline.
+  function barPath(x, y, w, h) {
+    var r = Math.min(3, w, h / 2);
+    return 'M' + x + ',' + y + 'h' + (w - r) + 'a' + r + ',' + r + ' 0 0 1 ' + r + ',' + r +
+      'v' + (h - 2 * r) + 'a' + r + ',' + r + ' 0 0 1 ' + (-r) + ',' + r + 'h' + (-(w - r)) + 'z';
+  }
+
+  // One labelled row per item: dots (joined into a range) or a bar, on a shared axis.
+  // Labels sit beside the track when there is room and above it when there is not.
+  function rows(n, W, o) {
+    var side = W >= 540, lw = side ? o.lw : 0, rh = side ? 36 : 48, top = 26;
+    var plotB = top + o.rows.length * rh, H = plotB + 24;
+    var x0 = lw + 1, x1 = W - 84;
+    function X(v) { return x0 + (x1 - x0) * v / o.max; }
+    var s = S('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': o.label }, n);
+    if (o.zone) S('rect', { x: X(o.zone[0]), y: top, width: X(o.zone[1]) - X(o.zone[0]), height: plotB - top, 'class': 'zone' }, s);
+    o.ticks.forEach(function (t) {
+      S('line', { x1: X(t), x2: X(t), y1: top, y2: plotB, 'class': 'grid' }, s);
+      S('text', { x: X(t), y: plotB + 17, 'class': 'tick', 'text-anchor': 'middle' }, s, o.fmt(t));
+    });
+    (o.refs || []).forEach(function (r) {
+      S('line', { x1: X(r.x), x2: X(r.x), y1: top - 6, y2: plotB, 'class': 'ref' }, s);
+      S('text', { x: X(r.x) + 6, y: 13, 'class': 'reflbl' }, s, r.label);
+    });
+    o.rows.forEach(function (r, i) {
+      var y = top + i * rh, cy = side ? y + rh / 2 : y + 34, cls = r.cls || 's1';
+      var lo = Math.min.apply(null, r.vals), hi = Math.max.apply(null, r.vals), endX;
+      S('text', { x: 0, y: side ? cy + 5 : y + 19, 'class': 'rowlbl' }, s, r.label);
+      if (o.bar) {
+        S('path', { d: barPath(X(0), cy - 4, X(hi) - X(0), 8), 'class': 'f ' + cls }, s);
+        endX = X(hi);
+      } else {
+        if (r.vals.length > 1) S('line', { x1: X(lo), x2: X(hi), y1: cy, y2: cy, 'class': 'rng ' + cls }, s);
+        r.vals.forEach(function (v) {
+          if (r.vals.length > 1) S('line', { x1: X(v), x2: X(v), y1: cy - 7, y2: cy + 7, 'class': 'tk ' + cls }, s);
+          else S('circle', { cx: X(v), cy: cy, r: 4.5, 'class': 'dot ' + cls }, s);
+        });
+        endX = X(hi) + 4.5;
+      }
+      if (r.ci) {
+        S('path', { d: 'M' + X(r.ci[0]) + ',' + cy + 'H' + X(r.ci[1]) + 'M' + X(r.ci[0]) + ',' + (cy - 4) + 'v8M' + X(r.ci[1]) + ',' + (cy - 4) + 'v8', 'class': 'ci' }, s);
+        endX = Math.max(endX, X(r.ci[1]));
+      }
+      S('text', { x: endX + 8, y: cy + 4, 'class': 'val' }, s, r.text);
+      S('rect', { x: 0, y: y, width: W, height: rh, 'class': 'hit', 'data-tip': r.tip || (r.label + '\n' + r.text) }, s);
+    });
+  }
+
+  // Lines over a log-scaled strength axis, 0 to 100% on y.
+  function lines(n, W, o) {
+    var H = o.h, ml = 36, mr = 10, mt = 8, mb = 44;
+    var a = Math.log(o.x[0]), b = Math.log(o.x[o.x.length - 1]);
+    function X(v) { return ml + (W - ml - mr) * (Math.log(v) - a) / (b - a); }
+    function Y(v) { return mt + (H - mt - mb) * (1 - v / 100); }
+    var s = S('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': o.label }, n);
+    [0, 25, 50, 75, 100].forEach(function (t) {
+      S('line', { x1: ml, x2: W - mr, y1: Y(t), y2: Y(t), 'class': 'grid' }, s);
+      S('text', { x: ml - 9, y: Y(t) + 3.5, 'class': 'tick', 'text-anchor': 'end' }, s, t === 100 ? '100%' : t);
+    });
+    var skip = W < 420 ? (o.skipNarrow || []) : [];
+    o.x.forEach(function (v) {
+      if (skip.indexOf(v) < 0) S('text', { x: X(v), y: H - mb + 18, 'class': 'tick', 'text-anchor': 'middle' }, s, v);
+    });
+    S('text', { x: ml, y: H - 6, 'class': 'tick' }, s, o.xLabel);
+    o.series.forEach(function (se) {
+      var d = se.vals.map(function (v, i) { return (i ? 'L' : 'M') + X(o.x[i]).toFixed(1) + ',' + Y(v).toFixed(1); }).join('');
+      S('path', { d: d, 'class': 'ln ' + se.cls + (se.dash ? ' dash' : '') }, s);
+      if (!se.dash) se.vals.forEach(function (v, i) { S('circle', { cx: X(o.x[i]), cy: Y(v), r: 4, 'class': 'dot ' + se.cls }, s); });
+    });
+    if (o.mark != null) {
+      var mi = o.x.indexOf(o.mark);
+      S('line', { x1: X(o.mark), x2: X(o.mark), y1: mt, y2: H - mb, 'class': 'ref' }, s);
+      o.series.forEach(function (se, k) {
+        S('text', { x: X(o.mark) + (k ? 9 : -9), y: Y(se.vals[mi]) + (k ? 17 : -9), 'class': 'val', 'text-anchor': k ? 'start' : 'end' }, s, se.vals[mi] + '%');
+      });
+    }
+    o.x.forEach(function (v, i) {
+      var l = i ? (X(o.x[i - 1]) + X(v)) / 2 : ml, r = i < o.x.length - 1 ? (X(v) + X(o.x[i + 1])) / 2 : W;
+      var tip = o.xName + ' ' + v + '\n' + o.series.map(function (se) { return se.name + ': ' + se.vals[i] + '%'; }).join('\n');
+      S('rect', { x: l, y: mt, width: r - l, height: H - mt - mb, 'class': 'hit', 'data-tip': tip }, s);
+    });
+  }
+
+  function table(id, head, body) {
+    var d = document.getElementById(id);
+    if (!d) return;
+    var wrap = document.createElement('div'), t = document.createElement('table');
+    wrap.className = 'scroll';
+    [head].concat(body).forEach(function (r, i) {
+      var tr = t.insertRow();
+      r.forEach(function (c) { var el = document.createElement(i ? 'td' : 'th'); el.textContent = c; tr.appendChild(el); });
+    });
+    wrap.appendChild(t);
+    d.appendChild(wrap);
+  }
+
+  var TICKS = [0, 20, 40, 60, 80, 100];
+
+  // Fig. 1: localization accuracy by setup (paper/tables/localization.md; probe from H3).
+  var acc = [
+    { label: 'Untrained model, own answers', vals: [9.8], text: '9.8%', cls: 's3' },
+    { label: 'Linear probe on untrained model', vals: [39.4], text: '39.4%', cls: 's3' },
+    { label: 'DC-SFT', vals: [66.7, 68.9, 70.3], text: '66.7–70.3%' },
+    { label: 'IFT that can abstain', vals: [78.2, 79.3, 80.6], text: '78.2–80.6%' },
+    { label: 'IFT, original format', vals: [82.2, 83.7, 84.2], text: '82.2–84.2%' }
+  ];
+  mount('c2', function (n, W) {
+    rows(n, W, { rows: acc, lw: 256, max: 100, ticks: TICKS, fmt: pct, refs: [{ x: 10, label: 'chance' }],
+      label: 'Share of trials naming the injected sentence, by setup' });
+  });
+  table('d2', ['Setup', 'Anchor 0', 'Anchor 0.5', 'Anchor 2'], [
+    ['Untrained model, own answers', '9.8', '', ''], ['Linear probe on the untrained model, best layer', '39.4', '', ''],
+    ['DC-SFT', '70.3', '68.9', '66.7'], ['IFT that can abstain', '80.6', '79.3', '78.2'], ['IFT, original format', '84.2', '83.7', '82.2']
+  ]);
+
+  // Fig. 2: patch-out ratio at one layer after the injection (H5).
+  var patch = [
+    { label: 'IFT that can abstain', vals: [8.7], ci: [6.4, 11.2], text: '8.7%', tip: 'IFT that can abstain\n8.7% (95% CI 6.4 to 11.2)' },
+    { label: 'DC-SFT', vals: [13.5], ci: [11.4, 15.8], text: '13.5%', tip: 'DC-SFT\n13.5% (95% CI 11.4 to 15.8)' }
+  ];
+  mount('c3', function (n, W) {
+    rows(n, W, { rows: patch, lw: 256, bar: true, max: 100, ticks: TICKS, fmt: pct, refs: [{ x: 20, label: 'rule: below 20%' }], zone: [0, 20],
+      label: 'Report rate after patching, as a share of the unpatched rate' });
+  });
+  table('d3', ['Method', 'Share left', '95% CI', 'Unpatched report rate'], [
+    ['IFT that can abstain', '8.7%', '6.4 to 11.2', '80.7%'], ['DC-SFT', '13.5%', '11.4 to 15.8', '71.0%']
+  ]);
+
+  // Fig. 3: 45 adapters under a denial note with nothing injected.
+  mount('c4', function (n, W) {
+    var cols = W < 520 ? 9 : 15, gap = 5, size = Math.min(26, (W - gap * (cols - 1)) / cols), rowsN = 45 / cols;
+    var H = rowsN * size + (rowsN - 1) * gap;
+    var s = S('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img',
+      'aria-label': '35 adapters name the sentence in the note on every trial, 7 on 41 to 95 percent of trials, 3 ignore the note' }, n);
+    for (var i = 0; i < 45; i++) {
+      var kind = i < 35 ? ['s2', 'Names the note\'s sentence on 100% of trials'] : i < 42 ? ['mid2', 'Names it on 41% to 95% of trials'] : ['none', 'Ignores the note: answers “nothing injected”'];
+      var inset = kind[0] === 'none' ? 0.5 : 0;
+      S('rect', { x: (i % cols) * (size + gap) + inset, y: Math.floor(i / cols) * (size + gap) + inset, width: size - 2 * inset, height: size - 2 * inset,
+        'class': 'sq ' + kind[0], 'data-tip': kind[1] }, s);
+    }
+  });
+
+  // Fig. 4: strength sweep with a suggestion note (results/exploratory/gaslight/sweep_summary.md).
+  var fr = [0.01, 0.02, 0.04, 0.07, 0.1, 0.2, 0.6];
+  var sweep = [
+    { name: 'Names the injected sentence', cls: 's1', vals: [1.3, 7.6, 26.0, 58.7, 76.7, 93.8, 100] },
+    { name: 'Names the note\'s sentence', cls: 's2', vals: [79.7, 70.8, 52.9, 27.6, 14.6, 3.2, 0] },
+    { name: 'Injected sentence, no note', cls: 's3', dash: true, vals: [3.6, 16.8, 43.2, 70.3, 83.2, 94.3, 100] }
+  ];
+  mount('c5', function (n, W) {
+    lines(n, W, { h: W < 520 ? 260 : 320, x: fr, series: sweep, xLabel: 'Injection strength, as a fraction of the largest trained strength', xName: 'Strength',
+      skipNarrow: [0.07], label: 'Share of trials naming the injected sentence or the sentence in the note, by injection strength' });
+  });
+  table('d5', ['Strength'].concat(sweep.map(function (s) { return s.name; })),
+    fr.map(function (f, i) { return [f].concat(sweep.map(function (s) { return s.vals[i] + '%'; })); }));
+
+  // Fig. 5: sigma sweep pooled over three seeds (results/exploratory/natural_units/pooled).
+  var sg = [0.5, 1, 2, 3, 5, 10, 20, 40];
+  var sigma = [
+    ['c6a', 'DC-SFT, no anchor', [26.5, 44.4, 68.6, 81.5, 92.2, 97.7, 100, 99.9], [10.4, 11.4, 17.9, 32.0, 69.6, 99.1, 100, 99.8]],
+    ['c6b', 'DC-SFT, anchor 2', [17.6, 33.2, 55.1, 68.8, 84.1, 98.0, 99.8, 100], [9.8, 10.0, 12.0, 16.2, 40.0, 93.6, 100, 100]],
+    ['c6c', 'IFT original format, anchor 2', [18.5, 31.2, 49.3, 59.6, 76.2, 92.6, 99.2, 100], [9.9, 10.2, 11.9, 14.7, 26.2, 66.2, 98.8, 100]],
+    ['c6d', 'IFT that can abstain, anchor 2', [1.9, 11.3, 32.1, 48.6, 72.2, 94.6, 100, 100], [0.7, 0.7, 0.8, 2.0, 13.1, 66.8, 99.4, 100]]
+  ];
+  sigma.forEach(function (p) {
+    mount(p[0], function (n, W) {
+      lines(n, W, { h: 210, x: sg, mark: p[0] === 'c6a' ? 1 : null, xLabel: 'Strength, σ', xName: 'σ', label: p[1] + ': concept vector against a random direction',
+        series: [{ name: 'Concept vector', cls: 's1', vals: p[2] }, { name: 'Random direction', cls: 's2', vals: p[3] }] });
+    });
+  });
+  table('d6', ['Setup', 'Vector'].concat(sg.map(function (v) { return v + 'σ'; })),
+    sigma.reduce(function (out, p) { return out.concat([[p[1], 'Concept'].concat(p[2]), ['', 'Random'].concat(p[3])]); }, []));
+
+  // Fig. 6: concept identification, five options (results/exploratory/concept_id_*).
+  var naming = [
+    { label: 'Injected, strength 0.6', vals: [18.0, 21.5], text: '18.0–21.5%' },
+    { label: 'Injected, strength 2.0', vals: [19.0, 21.6], text: '19.0–21.6%' },
+    { label: 'Concept written in the sentence', vals: [78, 86], text: '78–86%', cls: 's3' }
+  ];
+  mount('c7', function (n, W) {
+    rows(n, W, { rows: naming, lw: 256, max: 100, ticks: TICKS, fmt: pct, refs: [{ x: 20, label: 'chance' }],
+      label: 'Share of trials naming the injected concept' });
+  });
+  table('d7', ['Condition', 'Models', 'Lowest', 'Highest'], [
+    ['Injected, strength 0.6', '67', '18.0%', '21.5%'], ['Injected, strength 2.0', '67', '19.0%', '21.6%'],
+    ['Concept written in the sentence', 'Base, anchored DC-SFT', '78%', '86%']
+  ]);
+
+  render();
+  if (window.ResizeObserver) { var ro = new ResizeObserver(render); charts.forEach(function (c) { ro.observe(c[0]); }); }
+  else window.addEventListener('resize', render);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { charts.forEach(function (c) { c[0]._w = 0; }); render(); });
+
+  var tip = document.getElementById('tip');
+  function show(e) {
+    var t = e.target.closest && e.target.closest('[data-tip]');
+    if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.getAttribute('data-tip');
+    tip.hidden = false;
+    tip.style.left = Math.max(8, Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8)) + 'px';
+    tip.style.top = Math.min(e.clientY + 18, window.innerHeight - tip.offsetHeight - 8) + 'px';
+  }
+  document.addEventListener('pointermove', show);
+  document.addEventListener('pointerdown', show);
+  window.addEventListener('scroll', function () { tip.hidden = true; }, { passive: true });
+})();
+</script>
 </body>
 </html>
