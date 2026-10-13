@@ -11,27 +11,27 @@
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #f4f1ea;
-    --ink: #1d1b18;
-    --body: #1d1b18;
-    --soft: #37332c;
-    --muted: #524d44;
-    --faint: #6a6457;
+    --bg: #ffffff;
+    --ink: #0a0f15;
+    --body: #0a0f15;
+    --soft: #1c242e;
+    --muted: #3a4553;
+    --faint: #536070;
     --accent: #003b71;
     --accent-soft: rgba(0, 59, 113, 0.30);
-    --rule: #d5cdbb;
-    --rule-strong: #aea695;
-    --card: #faf8f3;
+    --rule: #d5dce5;
+    --rule-strong: #8f9cac;
+    --card: #f3f6fa;
     --s1: #1d5a9c;
     --s1-mid: #a9bfd6;
     --s2: #b5562a;
     --s2-mid: #dcb39e;
     --fail: #a34a22;
-    --warn-bg: #f1e3b6;
-    --warn-line: #dcc681;
-    --warn-ink: #6b4e00;
+    --warn-bg: #fbeab3;
+    --warn-line: #d9bd5f;
+    --warn-ink: #5c4300;
     --warn-dot: #c08a12;
-    --s3: #a39c8d;
+    --s3: #8d98a6;
     --glow-a: rgba(0, 59, 113, 0.10);
     --glow-b: transparent;
     --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -139,7 +139,7 @@
   .map table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; border: 1px solid var(--rule-strong); border-radius: 3px; }
   .map thead th:first-child { border-top-left-radius: 2px; } .map thead th:last-child { border-top-right-radius: 2px; }
   .map thead th { position: sticky; top: 0; z-index: 2; background: var(--card); text-align: left; vertical-align: bottom; font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.12em; line-height: 1.5; text-transform: uppercase; color: var(--soft); padding: 14px 18px 13px; border-bottom: 1px solid var(--rule-strong); }
-  .map thead th:nth-child(1) { width: 18%; } .map thead th:nth-child(2) { width: 16%; } .map thead th:nth-child(3) { width: 17%; } .map thead th:nth-child(4) { width: 19%; }
+  .map thead th:nth-child(1) { width: 20%; } .map thead th:nth-child(2) { width: 15%; } .map thead th:nth-child(3) { width: 17%; } .map thead th:nth-child(4) { width: 19%; }
   .map tbody th, .map tbody td { text-align: left; vertical-align: top; padding: 20px 16px 22px; border-bottom: 1px solid var(--rule); }
   .map tbody tr:last-child th, .map tbody tr:last-child td { border-bottom: 0; }
   .map tr > :first-child { padding-left: 22px; } .map tr > :last-child { padding-right: 22px; }
@@ -308,7 +308,7 @@
   @media (prefers-reduced-motion: reduce) { .cell { transition: none; } .cell:hover { transform: none; } }
   /* What is still open under each "confounds remain" row */
   .map tr.has-open > th, .map tr.has-open > td { border-bottom: 0; padding-bottom: 14px; }
-  .map tbody tr.open > td { padding: 0 22px 22px calc(18% + 16px); border-left: 0; color: var(--soft); }
+  .map tbody tr.open > td { padding: 0 22px 22px calc(20% + 16px); border-left: 0; color: var(--soft); }
   .gap { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--warn-line); border-radius: 2px; background: var(--card); }
   .gap > div { padding: 12px 18px 13px; }
   .gap > div + div { border-left: 1px solid var(--rule); }
@@ -328,6 +328,11 @@
     .gap > div + div { border-left: 0; border-top: 1px solid var(--rule); }
     .gap p, .gap ol, .gap ul { font-size: 16.5px; }
   }
+  .crits { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 9px; }
+  .crit, .opn { font-family: var(--mono); font-size: 10.5px; line-height: 1.4; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; padding: 2px 6px 1px; }
+  .crit { color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .opn { color: var(--warn-ink); border: 1px solid var(--warn-line); background: var(--warn-bg); padding: 1px 5px 0; vertical-align: 1px; white-space: nowrap; }
+  .status { letter-spacing: 0.08em; }
 </style>
 </head>
 <body>
@@ -364,9 +369,9 @@
       <div class="end">Internal state</div>
       <div class="fan" aria-hidden="true"><svg viewBox="0 0 100 300" preserveAspectRatio="none"><path class="none" d="M0 150 C55 150 45 50 100 50"/><path class="r1" d="M0 150 H100"/><path class="r2" d="M0 150 C55 150 45 250 100 250"/></svg></div>
       <ul class="ways">
-        <li><b>Nothing</b><span>A cue in the text is enough.</span></li>
-        <li><b>A signal that something is off</b><span>About the state, without its content.</span></li>
-        <li><b>A representation of the state as its own</b><span>What introspection proper would need.</span></li>
+        <li><b>From the text</b><span>A cue in the prompt is enough. No state is read.</span></li>
+        <li><b>First-order: caused by the state</b><span>A bare signal or a direct readout. Nothing represents the state.</span></li>
+        <li><b>Second-order: a representation of the state as its own</b><span>What introspection proper would need.</span></li>
       </ul>
       <div class="fan to" aria-hidden="true"><svg viewBox="0 0 100 300" preserveAspectRatio="none"><path class="r0" d="M0 50 C55 50 45 150 100 150"/><path class="r1" d="M0 150 H100"/><path class="r2" d="M0 250 C55 250 45 150 100 150"/></svg></div>
       <div class="end out">Report</div>
@@ -384,7 +389,7 @@
   <div class="map">
     <div class="tally">
       <div class="bar" aria-hidden="true"><i class="for"></i><i></i><i></i><i></i><i class="against"></i><i></i><i></i></div>
-      <p><span class="v for"><b>1</b>Robust</span><span class="v mixed"><b>5</b>Confounds remain</span><span class="v against"><b>1</b>Failed</span></p>
+      <p><span class="v for"><b>1</b>Holds under controls</span><span class="v mixed"><b>5</b>Confounds remain</span><span class="v against"><b>1</b>Failed</span></p>
     </div>
     <table>
       <thead>
@@ -392,16 +397,16 @@
       </thead>
       <tbody>
         <tr class="is-robust">
-          <th scope="row"><span class="status robust">Robust</span><br><h3>Detection</h3><p>It notices something</p></th>
+          <th scope="row"><span class="status robust">Holds under controls</span><br><h3>Detection</h3><p>It notices something</p></th>
           <td data-l="The cheap explanation">Yes-bias. Nothing about the state is read.</td>
-          <td data-l="What rules it out *">Unrelated yes/no questions; the false-positive rate.</td>
+          <td data-l="What rules it out *"><span class="crits"><span class="crit">Accuracy</span></span>Unrelated yes/no questions; the false-positive rate.</td>
           <td data-l="If it is ruled out †"><em class="w w1">A signal about the state.</em> A signal that something is off, like a noetic feeling: it evaluates without representing (Proust).</td>
           <td data-l="Who has run it, and what happened"><em>Lederman &amp; Mahowald; Pearson-Vogel; Macar.</em> Survives with the vector off the answer and 0–1% false alarms (Pearson-Vogel: read from the logits). Macar: not a single yes-direction.</td>
         </tr>
         <tr class="has-open">
           <th scope="row"><span class="status">Confounds remain</span><br><h3>Localization</h3><p>It says where</p></th>
           <td data-l="The cheap explanation">The answer follows the text, not the state.</td>
-          <td data-l="What rules it out *">Forced choice against chance; a note that points somewhere else.</td>
+          <td data-l="What rules it out *"><span class="crits"><span class="crit">Accuracy</span><span class="crit">Grounding</span></span>Forced choice against chance; <span class="opn">Open</span> a note that points somewhere else.</td>
           <td data-l="If it is ruled out †"><em class="w w1">A signal about the state.</em> The signal is tied to a place, with the item itself not retrieved: tip of the tongue.</td>
           <td data-l="Who has run it, and what happened"><em>Fornasiere; Hahami, Sinha &amp; Jain.</em> Forced choice passed. Our trained models follow a misleading note with nothing injected, and ignore it under a strong injection.</td>
         </tr>
@@ -411,7 +416,7 @@
         <tr class="has-open">
           <th scope="row"><span class="status">Confounds remain</span><br><h3>Content-specific detection</h3><p>Detection depends on what was injected</p></th>
           <td data-l="The cheap explanation">A detector tuned to one family of vectors.</td>
-          <td data-l="What rules it out *">Matched random vectors; the average of other concepts' vectors.</td>
+          <td data-l="What rules it out *"><span class="crits"><span class="crit">Grounding</span></span>Matched random vectors; <span class="opn">Open</span> the average of other concepts' vectors.</td>
           <td data-l="If it is ruled out †"><em class="w w1">A signal about the state.</em> The signal varies with content: grounding, in Lindsey's terms.</td>
           <td data-l="Who has run it, and what happened"><em>Rivera &amp; Africa; Mayner.</em> One fine-tuned model rejects matched noise 94% of the time; one untrained model shows no concept edge. Second control: no other run known.</td>
         </tr>
@@ -421,7 +426,7 @@
         <tr class="has-open">
           <th scope="row"><span class="status">Confounds remain</span><br><h3>Identification</h3><p>It names the content</p></th>
           <td data-l="The cheap explanation">Direct translation (Lindsey): the steered output, or the vector doing its usual work (Macar et al.).</td>
-          <td data-l="What rules it out *">No steering on the answer; a question the vector does not answer by itself.</td>
+          <td data-l="What rules it out *"><span class="crits"><span class="crit">Internality</span><span class="crit">Metacognitive representation</span></span>No steering on the answer; <span class="opn">Open</span> a question the vector does not answer by itself.</td>
           <td data-l="If it is ruled out †"><em class="w w2">A readout of content.</em> Content is read out: inner sense. Transparency views also accept the cheap route.</td>
           <td data-l="Who has run it, and what happened"><em>Lindsey; Pearson-Vogel; UK AISI.</em> Above chance with the vector on earlier tokens only (Pearson-Vogel: in middle layers, not the output). None rules out the vector's own effect.</td>
         </tr>
@@ -431,14 +436,14 @@
         <tr class="is-failed">
           <th scope="row"><span class="status failed">Failed</span><br><h3>Source monitoring</h3><p>It says where the content came from</p></th>
           <td data-l="The cheap explanation">No sense of origin: text and activation are treated alike.</td>
-          <td data-l="What rules it out *">The same content in the prompt and in the activations, answer unsteered.</td>
-          <td data-l="If it is ruled out †"><em class="w w3">Higher-order.</em> Content tagged by origin (cf. thought insertion); not yet the state itself.</td>
+          <td data-l="What rules it out *"><span class="crits"><span class="crit">Internality</span></span>The same content in the prompt and in the activations, answer unsteered.</td>
+          <td data-l="If it is ruled out †"><em class="w w2">A tag of origin.</em> Content tagged by origin (cf. thought insertion); not yet the state itself.</td>
           <td data-l="Who has run it, and what happened"><em>Singh, Linzen &amp; Ravfogel; Shah.</em> Models that pass detection cannot reliably tell a prompt cue from an injection (Singh). A trained readout fails a state-vs-transcript swap (Shah).</td>
         </tr>
         <tr class="has-open">
           <th scope="row"><span class="status">Confounds remain</span><br><h3>State characterization</h3><p>It describes the state</p></th>
           <td data-l="The cheap explanation">A direct readout, such as the size of the signal, or two signals that never meet.</td>
-          <td data-l="What rules it out *">Two injections at once: which concept was where, which was stronger?</td>
+          <td data-l="What rules it out *"><span class="crits"><span class="crit">Metacognitive representation</span></span><span class="opn">Open</span> Two injections at once: which concept was where, which was stronger?</td>
           <td data-l="If it is ruled out †"><em class="w w3">Higher-order.</em> The state is represented as a state: higher-order thought (Rosenthal).</td>
           <td data-l="Who has run it, and what happened"><em>Bhargav; Fornasiere; Yalon.</em> Layer and strength (Bhargav), type (Fornasiere), belief strength (Yalon), mostly needing in-context examples. Two-injection test: no one yet.</td>
         </tr>
@@ -458,7 +463,7 @@
       </tbody>
     </table>
     <div class="notes">
-      <p>* Beating an outside observer is a separate test. Injection passes it by construction.</p>
+      <p>* Blue tags: which of Lindsey's four criteria the test checks. OPEN: not yet run, or run only on our models. A test should also not be solvable from cues in the input (Singh et al.); injection meets that by construction.</p>
       <p>† Names in this column are the closest idea in philosophy, not an equivalence.</p>
     </div>
   </div>
