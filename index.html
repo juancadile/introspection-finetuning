@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problems for Language Model Introspection</title>
-<meta name="description" content="Ascribing introspection to a language model requires four criteria, met separately for each kind of introspective content. Current evidence meets the first-order criteria only in part, and no study has yet tested metacognitive representation.">
+<meta name="description" content="Claims about LM introspection concern distinct capacities with different evidential demands. Current evidence partly supports first-order state sensitivity, but no study has yet demonstrated metacognitive representation.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,6 +31,7 @@
     --s2: #b02a3e;
     --s2-mid: #e3a7b0;
     --s3: #9893a3;
+    --om: #a5650c;
     --glow-a: rgba(90, 61, 153, 0.10);
     --mono: 'Libre Franklin', 'Helvetica Neue', Arial, sans-serif;
     --serif: 'STIX Two Text', 'Times New Roman', serif;
@@ -57,6 +58,7 @@
       --s2: #f08a99;
       --s2-mid: #6a2a35;
       --s3: #6f6b7c;
+      --om: #e2ad57;
       --glow-a: rgba(130, 100, 220, 0.20);
     }
   }
@@ -98,7 +100,7 @@
   /* Causal chains */
   .chains { margin-top: 10px; }
   .chains svg { display: block; width: 100%; height: auto; overflow: visible; }
-  .chains .tall { display: none; max-width: 340px; margin: 0 auto; }
+  .chains .tall { display: none; max-width: 380px; margin: 0 auto; }
   .chains .box { fill: var(--card); stroke: var(--rule-strong); stroke-width: 1.2; }
   .chains .boxt { font-family: var(--mono); font-weight: 600; font-size: 12.5px; letter-spacing: 0.06em; fill: var(--ink); }
   .chains .cl { fill: var(--bg); stroke: var(--ink); stroke-width: 1.3; }
@@ -111,6 +113,9 @@
   .chains .p1 { fill: none; stroke: var(--sup); stroke-width: 2.4; }
   .chains .p0 { fill: none; stroke: var(--faint); stroke-width: 1.8; stroke-dasharray: 5 5; }
   .chains .ah2 { fill: var(--accent); } .chains .ah1 { fill: var(--sup); } .chains .ah0 { fill: var(--faint); }
+  .chains .p3 { fill: none; stroke: var(--om); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 0.1 6; }
+  .chains .ah3 { fill: var(--om); }
+  .chainkey li.o::before { border-top: 3px dotted var(--om); }
   .chainkey { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 12px; max-width: 40em; }
   .chainkey li { position: relative; padding-left: 40px; font-size: 17.5px; line-height: 1.5; color: var(--soft); }
   .chainkey li::before { content: ""; position: absolute; left: 0; top: 0.72em; width: 26px; border-top: 2.5px solid var(--k); }
@@ -158,6 +163,16 @@
   .ct-intro { font-size: 15.5px; color: var(--muted); }
 
   /* Our work */
+  .mains { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--ink); }
+  .mains > .label { color: var(--accent); font-size: 13px; }
+  .mains ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 26px 40px; counter-reset: m; }
+  .mains li { counter-increment: m; }
+  .mains li .cellref { margin: 0 0 10px; }
+  .mains h3 { font-size: 22px; line-height: 1.3; letter-spacing: -0.01em; margin: 0 0 10px; text-wrap: balance; }
+  .mains h3::before { content: counter(m) ". "; color: var(--accent); }
+  .mains li > p:last-child { margin: 0; font-size: 17px; line-height: 1.55; color: var(--soft); text-wrap: pretty; }
+  .mains .sum { margin: 26px 0 0; font-size: 21px; line-height: 1.4; max-width: 34em; }
+  @media (max-width: 700px) { .mains ol { grid-template-columns: 1fr; } .mains h3 { font-size: 20px; } }
   .ours { margin-top: 30px; }
   .ours .ct { margin-top: 26px; }
   .ours .ct table { border-top-color: var(--ink); }
@@ -287,28 +302,34 @@
     <b>Nick Meyer</b>, Columbia University, Department of Computer Science · <a href="mailto:nick.meyer@columbia.edu">nick.meyer@columbia.edu</a> · <a href="https://nickmeyer.xyz">nickmeyer.xyz</a>
   </p>
   <div class="thesis">
-    <p>Ascribing introspection requires four criteria, met separately for each kind of introspective content. Current evidence meets the first-order criteria only in part, and no study has yet tested metacognitive representation.</p>
+    <p>Claims about LM introspection concern distinct capacities with different evidential demands. Current evidence partly supports first-order state sensitivity, but no study has yet demonstrated metacognitive representation.</p>
   </div>
 </header>
 
 <section>
   <h2>The problem</h2>
   <div class="prose">
-    <p>Language models (LMs) can produce reports about their own internal states, that much is clear. Whether these reports surface from a process we’d be inclined to call introspection is less clear, and contested.</p>
-    <p>Part of the issue is conceptual imprecision: some papers test different claims using the same terms, others test the same claims using different terms. Some appear to disagree when their results actually fit together; others appear to agree when they’re actually in conflict. As a result, it has become difficult to say what the literature has shown, or what it can even in principle show.</p>
+    <p>Language models (LMs) can produce reports about their own internal states, that much is clear. Whether these reports surface from a process we’d call introspection is less clear, and contested.</p>
+    <p>Part of the problem is conceptual imprecision: different papers use the same term for different capacities, or different terms for the same capacity. Consequently, results presented as supporting or challenging “introspection” often bear on different claims.</p>
     <p>Here, we attempt to make this more clear by: 1) <b>defining</b> introspection for language models, 2) <b>operationalizing</b> its study into one framework, and 3) <b>evaluating</b> existing empirical claims under this framework.</p>
   </div>
 </section>
 
 <section>
-  <h2>Introspection requires causality of the “right kind”</h2>
+  <h2>One self-report, four causal routes</h2>
   <figure class="chains">
-    <svg class="wide" viewBox="0 0 760 230" role="img" aria-label="Three causal chains from input to report: an input-level chain that bypasses S1, a first-order chain through S1 only, and a higher-order chain through S2, a state that represents S1.">
+    <svg class="wide" viewBox="0 0 760 294" role="img" aria-label="Four causal routes from input to report: an input-level route that bypasses S1, an output-mediated route that infers S1 from the model’s own earlier output, a first-order route through S1 only, and a higher-order route through S2, a state that represents S1.">
       <defs>
         <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah2" d="M0 0L10 5L0 10z"/></marker>
         <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah1" d="M0 0L10 5L0 10z"/></marker>
         <marker id="a0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah0" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah3" d="M0 0L10 5L0 10z"/></marker>
       </defs>
+      <path class="p3" d="M214 88 V30 H372" marker-end="url(#a3)"/>
+      <path class="p3" d="M516 30 H668 V94" marker-end="url(#a3)"/>
+      <rect class="box" x="374" y="10" width="140" height="40" rx="2"/>
+      <text class="boxt" x="444" y="34.5" text-anchor="middle">OWN OUTPUT</text>
+      <g transform="translate(0 64)">
       <path class="p0" d="M52 92 V200 H660 V96" marker-end="url(#a0)"/>
       <path class="p1" d="M210 104 V172 H640 V96" marker-end="url(#a1)"/>
       <path class="p2" d="M96 58 H150" marker-end="url(#a2)"/>
@@ -327,8 +348,9 @@
       <text class="big g" x="486" y="76" text-anchor="middle">S1</text>
       <rect class="box" x="606" y="32" width="96" height="60" rx="2"/>
       <text class="boxt" x="654" y="66" text-anchor="middle">REPORT</text>
+      </g>
     </svg>
-    <svg class="tall" viewBox="0 0 340 470" role="img" aria-label="Three causal chains from input to report: an input-level chain that bypasses S1, a first-order chain through S1 only, and a higher-order chain through S2, a state that represents S1.">
+    <svg class="tall" viewBox="0 0 400 470" role="img" aria-label="Four causal routes from input to report: an input-level route that bypasses S1, an output-mediated route that infers S1 from the model’s own earlier output, a first-order route through S1 only, and a higher-order route through S2, a state that represents S1.">
       <path class="p0" d="M40 64 H18 V438 H96" marker-end="url(#a0)"/>
       <path class="p1" d="M210 140 H300 V420 H246" marker-end="url(#a1)"/>
       <path class="p2" d="M164 70 V104" marker-end="url(#a2)"/>
@@ -346,10 +368,16 @@
       <text class="sm" x="104" y="282">metacognitive state</text>
       <text class="big g" x="180" y="306" text-anchor="middle">S1</text>
       <rect class="box" x="98" y="398" width="144" height="56" rx="2"/>
+      <path class="p3" d="M226 124 H364 V228" marker-end="url(#a3)"/>
+      <path class="p3" d="M364 286 V444 H246" marker-end="url(#a3)"/>
+      <rect class="box" x="326" y="230" width="72" height="54" rx="2"/>
+      <text class="boxt" x="362" y="254" text-anchor="middle">OWN</text>
+      <text class="boxt" x="362" y="271" text-anchor="middle">OUTPUT</text>
       <text class="boxt" x="170" y="431" text-anchor="middle">REPORT</text>
     </svg>
     <ul class="chainkey">
       <li class="d"><b style="--kt: var(--muted)">Input-level chain:</b> The report bypasses S1: it does not depend on the state it describes.</li>
+      <li class="o"><b style="--kt: var(--om)">Output-mediated chain:</b> The report infers S1 from the model’s earlier output rather than accessing S1 internally.</li>
       <li style="--k: var(--sup)"><b style="--kt: var(--sup)">First-order (only) chain:</b> The report depends on S1, but on no metacognitive state.</li>
       <li style="--k: var(--accent)"><b style="--kt: var(--accent)">Higher-order chain:</b> The report depends on S2, a state that represents S1 as a state.</li>
     </ul>
@@ -358,10 +386,10 @@
 </section>
 
 <section>
-  <h2>Ascribing introspection: content and criteria</h2>
+  <h2>Ascribing introspection: capacities and criteria</h2>
   <div class="prose">
-    <p>We borrow four criteria from Lindsey (2025): <b>accuracy</b>, <b>grounding</b>, <b>internality</b> and <b>metacognitive representation</b>. Any claims of introspection require all four. Papers have studied many tasks that one might call “introspective,” and we call what each task reports the <b>content</b> of introspection. Below, rows are introspective content, and columns are the criteria that content must meet before we can ascribe introspective ability. Each test must also control for known confounds and causal bypass routes (Morris &amp; Plunkett, 2025).</p>
-    <p>Rows differ in what a pass lets us ascribe to the model. They are ordered from coarse (detection: something is there) to fine (state characterization: how it relates to other states). A pass on a row ascribes introspection of that content only. Finer content may presuppose coarser content (identifying a state implies detecting it), but a pass on a coarse row says nothing about finer ones.</p>
+    <p>We adapt four evidential criteria from Lindsey (2025): <b>accuracy</b>, <b>grounding</b>, <b>internality</b>, and <b>metacognitive representation</b>. Rows are capacities discussed in the literature under the label “introspection”; columns ask what evidence each capacity must satisfy before it supports an introspective ascription. Meeting the first three criteria establishes a first-order route from internal state to report. Only the fourth distinguishes a metacognitive route. Each test must also control for known confounds and causal bypasses (Morris &amp; Plunkett, 2025).</p>
+    <p>The capacities are ordered from coarse to fine: detecting that something occurred, locating it, identifying its content and source, and characterizing it relative to other states. Evidence for a coarser capacity does not establish a finer one. Control is included separately as a possible use of introspective information.</p>
   </div>
   <div class="keys"><span>One tile per study:</span><span><i class="st s">Sufficient evidence</i></span><span><i class="st i">Insufficient evidence</i></span><span><i class="st a">Evidence against</i></span></div>
   <div class="keys ct-intro"><span><i class="tag est">Established</i>at least one sufficient study and none against</span><span><i class="tag fail">Failed</i>every study against</span><span><i class="tag part">Partly</i>the rest</span><span><i class="tag nyt">Not yet tested</i>no study yet</span></div>
@@ -369,11 +397,11 @@
   <div class="ct">
   <table>
     <thead><tr>
-      <th scope="col">Introspective content<i>Coarse ↓ fine</i></th>
-      <th scope="col">Accuracy<i>The report is right</i></th>
-      <th scope="col">Grounding<i>It depends on the state, not on a cue</i></th>
-      <th scope="col">Internality<i>Not read off its own output</i></th>
-      <th scope="col" class="m">Metacognitive representation<i>A state about the state, as its own</i></th>
+      <th scope="col">Capacity claimed<i>Coarse ↓ fine</i></th>
+      <th scope="col">Accuracy<i>Does the report match the target state?</i></th>
+      <th scope="col">Grounding<i>Does the report change because the target state changes—not merely because of textual cues?</i></th>
+      <th scope="col">Internality<i>Is the signal available before—and independently of—the model’s answer?</i></th>
+      <th scope="col" class="m">Metacognitive representation<i>Does another state represent the target state as the model’s own?</i></th>
     </tr></thead>
     <tbody>
       <tr>
@@ -427,7 +455,7 @@
       </tr>
       <tr class="asym">
         <th scope="row">The asymmetry</th>
-        <td colspan="4">Each cell is <b>necessary</b>: a failure in any cell counts against introspection of that row’s content. Within a row, the four cells are <b>jointly sufficient</b>. Passes in only the first three columns are still compatible with a first-order process, and only the metacognitive column separates the two routes in the diagram above.</td>
+        <td colspan="4">Each criterion excludes a different cheap explanation. Accuracy excludes guessing; grounding excludes input cues; internality excludes reading the model’s own output; metacognitive representation excludes a merely first-order detector. The first three establish causal state sensitivity, but only the fourth distinguishes metacognition.</td>
       </tr>
     </tbody>
   </table>
@@ -438,6 +466,26 @@
   <h2>Our empirical work</h2>
   <div class="prose">
     <p>A case study on Llama-3.2-1B: 45 adapters trained to say which of ten sentences carried an injected concept vector, with Introspection Fine-Tuning (Hahami, Sinha and Jain) and our own method, DC-SFT, at three strengths of a KL anchor and five seeds, plus control adapters trained on random vectors, shuffled labels or no injection. The fine-tuned case is the one Singh et al. set aside.</p>
+  </div>
+
+  <div class="mains">
+    <p class="label">Two main results</p>
+    <ol>
+      <li>
+        <p class="cellref"><i class="st a">Localization · grounding</i></p>
+        <h3>The injected state causes the report, but a note alone also sets it off.</h3>
+        <p>Patching out the injected state leaves only 8.7% and 13.5% of reports (pre-registered; <a href="#f2">Fig. 2</a>). Yet with nothing injected, a note naming a sentence makes 42 of 45 adapters report an injection there (<a href="#f3">Fig. 3</a>). The cause is real; the report is not grounded.</p>
+      </li>
+      <li>
+        <p class="cellref"><i class="st a">Content-sensitive detection · grounding</i></p>
+        <h3>Concept vectors beat random ones, but not because of the concept.</h3>
+        <p>At 1σ, a concept vector is noticed on 31–44% of trials and a random direction on 10–11% (<a href="#f5">Fig. 5</a>). The mean of the other concepts’ vectors is noticed on every trial, and adapters trained on random vectors show no concept edge. The edge comes from a direction all concept vectors share.</p>
+      </li>
+    </ol>
+    <p class="sum">Together: training produces a readout that passes accuracy and internality, and fails grounding.</p>
+  </div>
+
+  <div class="prose" style="margin-top: 56px">
     <p>Below, every result we have, placed in the cell of the table it bears on. Our tiles in the table above (ringed) are the ones we treat as settled; this grid also lists partial and exploratory results.</p>
   </div>
   <div class="keys"><span><i class="st s">Sufficient</i></span><span><i class="st i">Insufficient</i></span><span><i class="st a">Against</i></span><span><b class="pe" style="font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.06em">PRE</b>pre-registered, held-out test concepts</span><span><b class="pe" style="font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.06em">EXP</b>exploratory</span></div>
@@ -640,9 +688,9 @@
 <section>
   <h2>When would philosophers call it introspection?</h2>
   <dl class="tiers">
-    <dt class="d"><b>Accuracy alone</b><span>A robust pattern of reports</span></dt>
+    <dt class="d"><b>Accuracy suffices</b><span>A robust pattern of reports</span></dt>
     <dd>Interpretationism (Dennett): a robust pattern of accurate self-reports is all there is to find.</dd>
-    <dt class="d"><b>Not grounded</b><span>Accurate, but from the text</span></dt>
+    <dt class="d"><b>Self-interpretation from cues</b><span>Accurate, but from the text</span></dt>
     <dd>Carruthers: we know our own thoughts this way too, by interpreting cues. He does not call it introspection in us either.</dd>
     <dt style="--k: var(--sup)"><b>First three criteria</b><span>Accuracy, grounding, internality</span></dt>
     <dd>Transparency (Evans, Byrne): we know our beliefs by looking outward, with no inner scan. Proust: feelings that guide without representing the state.</dd>
