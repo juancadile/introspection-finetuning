@@ -100,7 +100,7 @@
   /* Causal chains */
   .chains { margin-top: 10px; }
   .chains svg { display: block; width: 100%; height: auto; overflow: visible; }
-  .chains .tall { display: none; max-width: 380px; margin: 0 auto; }
+  .chains .tall { display: none; max-width: 350px; margin: 0 auto; }
   .chains .box { fill: var(--card); stroke: var(--rule-strong); stroke-width: 1.2; }
   .chains .boxt { font-family: var(--mono); font-weight: 600; font-size: 12.5px; letter-spacing: 0.06em; fill: var(--ink); }
   .chains .cl { fill: var(--bg); stroke: var(--ink); stroke-width: 1.3; }
@@ -115,6 +115,7 @@
   .chains .ah2 { fill: var(--accent); } .chains .ah1 { fill: var(--sup); } .chains .ah0 { fill: var(--faint); }
   .chains .p3 { fill: none; stroke: var(--om); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 0.1 6; }
   .chains .ah3 { fill: var(--om); }
+  .chains .sm.om { fill: var(--om); }
   .chainkey li.o::before { border-top: 3px dotted var(--om); }
   .chainkey { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 12px; max-width: 40em; }
   .chainkey li { position: relative; padding-left: 40px; font-size: 17.5px; line-height: 1.5; color: var(--soft); }
@@ -325,10 +326,8 @@
         <marker id="a0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah0" d="M0 0L10 5L0 10z"/></marker>
         <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah3" d="M0 0L10 5L0 10z"/></marker>
       </defs>
-      <path class="p3" d="M214 88 V30 H372" marker-end="url(#a3)"/>
-      <path class="p3" d="M516 30 H668 V94" marker-end="url(#a3)"/>
-      <rect class="box" x="374" y="10" width="140" height="40" rx="2"/>
-      <text class="boxt" x="444" y="34.5" text-anchor="middle">OWN OUTPUT</text>
+      <path class="p3" d="M214 88 V30 H52 V92" marker-end="url(#a3)"/>
+      <text class="sm om" x="133" y="21" text-anchor="middle">written, then read as text</text>
       <g transform="translate(0 64)">
       <path class="p0" d="M52 92 V200 H660 V96" marker-end="url(#a0)"/>
       <path class="p1" d="M210 104 V172 H640 V96" marker-end="url(#a1)"/>
@@ -350,8 +349,8 @@
       <text class="boxt" x="654" y="66" text-anchor="middle">REPORT</text>
       </g>
     </svg>
-    <svg class="tall" viewBox="0 0 400 470" role="img" aria-label="Four causal routes from input to report: an input-level route that bypasses S1, an output-mediated route that infers S1 from the model’s own earlier output, a first-order route through S1 only, and a higher-order route through S2, a state that represents S1.">
-      <path class="p0" d="M40 64 H18 V438 H96" marker-end="url(#a0)"/>
+    <svg class="tall" viewBox="0 0 350 470" role="img" aria-label="Four causal routes from input to report: an input-level route that bypasses S1, an output-mediated route that infers S1 from the model’s own earlier output, a first-order route through S1 only, and a higher-order route through S2, a state that represents S1.">
+      <path class="p0" d="M108 56 H18 V438 H96" marker-end="url(#a0)"/>
       <path class="p1" d="M210 140 H300 V420 H246" marker-end="url(#a1)"/>
       <path class="p2" d="M164 70 V104" marker-end="url(#a2)"/>
       <path class="p1" d="M176 70 V104" marker-end="url(#a1)"/>
@@ -368,11 +367,8 @@
       <text class="sm" x="104" y="282">metacognitive state</text>
       <text class="big g" x="180" y="306" text-anchor="middle">S1</text>
       <rect class="box" x="98" y="398" width="144" height="56" rx="2"/>
-      <path class="p3" d="M226 124 H364 V228" marker-end="url(#a3)"/>
-      <path class="p3" d="M364 286 V444 H246" marker-end="url(#a3)"/>
-      <rect class="box" x="326" y="230" width="72" height="54" rx="2"/>
-      <text class="boxt" x="362" y="254" text-anchor="middle">OWN</text>
-      <text class="boxt" x="362" y="271" text-anchor="middle">OUTPUT</text>
+      <path class="p3" d="M226 124 H332 V40 H234" marker-end="url(#a3)"/>
+      <text class="sm om" x="283" y="30" text-anchor="middle">read as text</text>
       <text class="boxt" x="170" y="431" text-anchor="middle">REPORT</text>
     </svg>
     <ul class="chainkey">
