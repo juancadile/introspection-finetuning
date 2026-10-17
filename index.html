@@ -4,37 +4,43 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problems for Language Model Introspection</title>
-<meta name="description" content="Claims about LM introspection concern distinct capacities with different evidential demands. Current evidence partly supports first-order state sensitivity, but no study has yet demonstrated metacognitive representation.">
+<meta name="description" content="Claims of LM introspection concern distinct capacities with different evidential demands. Current evidence meets some first-order criteria, but none of the studies we review meets them together or shows metacognitive representation.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light dark;
     --bg: #ffffff;
-    --ink: #13111a;
-    --body: #13111a;
-    --soft: #26232f;
-    --muted: #4a4656;
-    --faint: #5e596b;
-    --accent: #5a3d99;
-    --accent-soft: rgba(90, 61, 153, 0.28);
-    --meta-bg: #f4f1fa;
-    --rule: #dcdae3;
-    --rule-strong: #9a96a6;
-    --card: #f6f5f9;
-    --sup: #1b7a64;
+    --ink: #1c1d20;
+    --body: #1c1d20;
+    --soft: #2e3034;
+    --muted: #4f5359;
+    --faint: #63676d;
+    --accent: #6a3d9a;
+    --accent-soft: rgba(106, 61, 154, 0.28);
+    --meta-bg: #efe9f5;
+    --meta-cell: #faf8fc;
+    --rule: #e4e6e9;
+    --rule-strong: #a7abb1;
+    --card: #f3f4f5;
+    --sup: #2a9d8f;
+    --sup-t: #1f7a6f;
     --sup-bg: #e3f2ed;
-    --ag: #b02a3e;
-    --na: #6b6878;
-    --s1: #1b7a64;
-    --s2: #b02a3e;
+    --ag: #b0384a;
+    --na: #6f747a;
+    --na-line: #b4b8be;
+    --r1: #80858c;
+    --r1-t: #62676e;
+    --s1: #2a9d8f;
+    --s2: #b0384a;
     --s2-mid: #e3a7b0;
     --s3: #9893a3;
-    --om: #a5650c;
-    --glow-a: rgba(90, 61, 153, 0.10);
-    --mono: 'Libre Franklin', 'Helvetica Neue', Arial, sans-serif;
-    --serif: 'STIX Two Text', 'Times New Roman', serif;
+    --om: #d08a2a;
+    --om-t: #9a5f0e;
+    --glow-a: rgba(106, 61, 154, 0.10);
+    --mono: 'Atkinson Hyperlegible Next', 'Helvetica Neue', Arial, sans-serif;
+    --serif: 'Newsreader', Georgia, serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -44,21 +50,27 @@
       --soft: #d3d0dc;
       --muted: #aaa6b6;
       --faint: #938fa1;
-      --accent: #b9a6f0;
-      --accent-soft: rgba(185, 166, 240, 0.32);
-      --meta-bg: #17142a;
+      --accent: #c2a6ec;
+      --accent-soft: rgba(194, 166, 236, 0.32);
+      --meta-bg: #1d1630;
+      --meta-cell: #15121f;
       --rule: #2a2735;
       --rule-strong: #4a4658;
-      --card: #14131b;
-      --sup: #5cc9a8;
+      --card: #16151d;
+      --sup: #4fc2b2;
+      --sup-t: #6fd6c7;
       --sup-bg: #12302a;
-      --ag: #f08a99;
+      --ag: #e57a8b;
       --na: #9a96a8;
-      --s1: #5cc9a8;
-      --s2: #f08a99;
+      --na-line: #5d5a6a;
+      --r1: #9a9eaa;
+      --r1-t: #b3b7c2;
+      --s1: #4fc2b2;
+      --s2: #e57a8b;
       --s2-mid: #6a2a35;
       --s3: #6f6b7c;
-      --om: #e2ad57;
+      --om: #e2a24a;
+      --om-t: #ecb466;
       --glow-a: rgba(130, 100, 220, 0.20);
     }
   }
@@ -74,94 +86,113 @@
   main { max-width: 820px; margin: 0 auto; padding: 0 30px; counter-reset: sec; }
 
   /* Labels: sans capitals */
-  .eyebrow, .label, h2::before, .fig h4, figcaption b, .ct thead th, .tag, .st, .v, .panel p, .ct td::before, footer div, details.data summary, .box, .tiers dt b { font-family: var(--mono); font-weight: 600; letter-spacing: 0.045em; text-transform: uppercase; }
+  .eyebrow, .label, h2::before, .fig h4, figcaption b, .ct thead th, .st, .v, .panel p, .ct td::before, footer div, details.data summary { font-family: var(--mono); font-weight: 600; letter-spacing: 0.045em; text-transform: uppercase; }
 
   /* Head */
-  .head { padding: 84px 0 0; }
-  .eyebrow { font-size: 12.5px; color: var(--accent); margin: 0 0 26px; line-height: 1.7; }
+  .head { padding: 0; }
+  .eyebrow { font-size: 12.5px; color: var(--ink); margin: 0; line-height: 1.7; }
+  .topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px 28px; padding: 26px 0; margin-bottom: 64px; }
+  .topbar nav { display: flex; flex-wrap: wrap; gap: 6px 26px; font-family: var(--mono); font-size: 13.5px; }
+  .topbar nav a { color: var(--muted); background-image: none; }
+  .topbar nav a:hover { color: var(--ink); }
   h1 { font-size: 46px; line-height: 1.08; font-weight: 400; letter-spacing: -0.02em; margin: 0 0 30px; text-wrap: balance; max-width: 14em; color: var(--accent); }
   .byline { font-family: var(--mono); font-size: 13px; letter-spacing: 0.02em; line-height: 1.9; color: var(--muted); margin: 0; font-variant-numeric: lining-nums; }
   .byline b { font-weight: 500; color: var(--ink); }
   .byline a { color: inherit; background-image: none; border-bottom: 1px solid var(--rule-strong); }
-  .thesis { margin: 48px 0 0; padding: 26px 30px 28px; background: var(--meta-bg); border-left: 3px solid var(--accent); }
+  .thesis { margin: 40px 0 0; padding: 20px 24px 22px; background: var(--meta-bg); }
   .thesis p { font-size: 26px; line-height: 1.34; letter-spacing: -0.01em; margin: 0; max-width: 30em; text-wrap: pretty; }
 
   /* Sections */
   section { margin-top: 88px; counter-increment: sec; }
-  h2::before { content: counter(sec, decimal-leading-zero); content: counter(sec, decimal-leading-zero) / ""; display: block; font-size: 12.5px; line-height: 1.6; color: var(--accent); margin-bottom: 14px; background: linear-gradient(var(--rule), var(--rule)) no-repeat 3.1em 50% / calc(100% - 3.1em) 1px; }
-  h2 { font-size: 28px; line-height: 1.2; font-weight: 500; letter-spacing: -0.015em; margin: 0 0 22px; text-wrap: balance; }
+  h2::before { content: counter(sec, decimal-leading-zero) " — " attr(data-k); content: counter(sec, decimal-leading-zero) " — " attr(data-k) / ""; display: block; font-size: 12px; line-height: 1.6; color: var(--accent); margin-bottom: 12px; }
+  h2 { position: relative; font-size: 30px; line-height: 1.15; font-weight: 500; letter-spacing: -0.015em; margin: 0 0 22px; padding-top: 22px; border-top: 3px solid var(--ink); text-wrap: balance; }
   h3 { font-weight: 500; }
   .prose { font-size: 19.5px; line-height: 1.66; color: var(--body); max-width: 38em; }
   .prose p { margin: 0 0 1.1em; text-wrap: pretty; }
   .prose p:last-child { margin-bottom: 0; }
   .prose b { font-weight: 600; }
   .label { font-size: 12.5px; color: var(--faint); margin: 0 0 14px; }
+  .sn { display: block; margin: 10px 0 4px; padding-top: 8px; border-top: 1px solid var(--rule-strong); font-family: var(--mono); font-size: 13.5px; line-height: 1.5; color: var(--muted); text-wrap: pretty; }
+  .sn b { color: var(--ink); font-weight: 700; margin-right: 4px; }
+  .sn a { color: inherit; }
 
-  /* Causal chains */
+  /* Causal routes */
   .chains { margin-top: 10px; }
-  .chains svg { display: block; width: 100%; height: auto; overflow: visible; }
-  .chains .tall { display: none; max-width: 350px; margin: 0 auto; }
-  .chains .box { fill: var(--card); stroke: var(--rule-strong); stroke-width: 1.2; }
-  .chains .boxt { font-family: var(--mono); font-weight: 600; font-size: 12.5px; letter-spacing: 0.06em; fill: var(--ink); }
-  .chains .cl { fill: var(--bg); stroke: var(--ink); stroke-width: 1.3; }
-  .chains .cl2 { fill: var(--meta-bg); stroke: var(--accent); stroke-width: 1.3; }
-  .chains .ghost { fill: var(--bg); stroke: var(--rule-strong); stroke-width: 1.1; stroke-dasharray: 3 3; }
-  .chains .big { font-family: var(--serif); font-size: 24px; fill: var(--ink); }
-  .chains .big.g { fill: var(--faint); font-size: 20px; }
-  .chains .sm { font-family: var(--serif); font-style: italic; font-size: 12px; fill: var(--muted); }
-  .chains .p2 { fill: none; stroke: var(--accent); stroke-width: 2.4; }
-  .chains .p1 { fill: none; stroke: var(--sup); stroke-width: 2.4; }
-  .chains .p0 { fill: none; stroke: var(--faint); stroke-width: 1.8; stroke-dasharray: 5 5; }
-  .chains .ah2 { fill: var(--accent); } .chains .ah1 { fill: var(--sup); } .chains .ah0 { fill: var(--faint); }
-  .chains .p3 { fill: none; stroke: var(--om); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 0.1 6; }
-  .chains .ah3 { fill: var(--om); }
-  .chains .sm.om { fill: var(--om); }
-  .chainkey li.o::before { border-top: 3px dotted var(--om); }
-  .chainkey { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 12px; max-width: 40em; }
-  .chainkey li { position: relative; padding-left: 40px; font-size: 17.5px; line-height: 1.5; color: var(--soft); }
-  .chainkey li::before { content: ""; position: absolute; left: 0; top: 0.72em; width: 26px; border-top: 2.5px solid var(--k); }
-  .chainkey li.d::before { border-top: 2px dashed var(--faint); }
-  .chainkey b { font-weight: 600; color: var(--kt, var(--ink)); }
-  .chainnote { margin: 22px 0 0; font-size: 17.5px; line-height: 1.55; font-style: italic; color: var(--muted); max-width: 40em; }
+  .chains .scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; width: min(1180px, 100vw - 48px); margin-left: 50%; transform: translateX(-50%); }
+  .chains svg { display: block; width: 100%; min-width: 760px; height: auto; overflow: visible; }
+  .chains .ln { fill: none; stroke-width: 6; }
+  .chains .r1 { stroke: var(--r1); stroke-dasharray: 14 10; }
+  .chains .r2 { stroke: var(--om); stroke-dasharray: 14 10; }
+  .chains .r2s { stroke: var(--om); stroke-dasharray: 12 8; }
+  .chains .r3 { stroke: var(--sup); }
+  .chains .r4 { stroke: var(--accent); }
+  .chains .f1 { fill: var(--r1); } .chains .f2 { fill: var(--om); } .chains .f3 { fill: var(--sup); } .chains .f4 { fill: var(--accent); }
+  .chains .cloud { fill: var(--bg); stroke: var(--ink); stroke-width: 3; }
+  .chains .cloud.meta { fill: var(--meta-bg); }
+  .chains .cloud.past { stroke: var(--rule-strong); stroke-width: 2; }
+  .chains .cloud.ghost { stroke: var(--rule-strong); stroke-width: 2; stroke-dasharray: 7 6; }
+  .chains .box { fill: var(--card); stroke: var(--rule-strong); stroke-width: 2; }
+  .chains .lab { font-family: var(--mono); font-size: 28px; font-weight: 600; letter-spacing: 0.06em; fill: var(--ink); }
+  .chains .boxt { font-family: var(--serif); font-style: italic; font-size: 26px; fill: var(--muted); }
+  .chains .big { font-family: var(--serif); font-size: 52px; fill: var(--ink); }
+  .chains .sub { font-family: var(--serif); font-style: italic; font-size: 25px; fill: var(--muted); }
+  .chains .past-t { fill: var(--r1); }
+  .chains .ghost-t { fill: var(--faint); }
+  .chains .att { font-family: var(--serif); font-style: italic; font-size: 24px; fill: var(--muted); }
+  .chains .badge { fill: var(--bg); stroke-width: 3; }
+  .chains .badge-t { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+  .chains .om-t { font-family: var(--serif); font-style: italic; font-size: 22px; fill: var(--om-t); }
+  .chains .hint { display: none; margin: 8px 0 0; font-family: var(--mono); font-size: 12px; color: var(--faint); }
+  .routes { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 34px 48px; margin-top: 34px; }
+  .routes p { margin: 0 0 12px; font-size: 17px; line-height: 1.55; color: var(--soft); text-wrap: pretty; }
+  .routes p.key { font-size: 18px; font-weight: 600; color: var(--ink); }
+  .routekey { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 10px; }
+  .routekey li { position: relative; padding-left: 44px; font-size: 17px; line-height: 1.5; color: var(--soft); }
+  .routekey li::before { content: ""; position: absolute; left: 0; top: 0.68em; width: 30px; height: 0; border-top: 3px solid var(--k); }
+  .routekey li.d::before { border-top-style: dashed; }
+  .routekey li.both::before { height: 6px; border-top: 3px solid var(--accent); border-bottom: 3px solid var(--sup); top: 0.56em; }
+  .routekey b { font-weight: 600; color: var(--kt, var(--ink)); }
+  .routekey li.rule { padding-top: 14px; border-top: 1px solid var(--rule); }
+  .routekey li.rule::before { top: calc(14px + 0.56em); }
+  .routekey li.plain::before { display: none; }
+  .routekey li.plain { padding-left: 0; }
 
-  /* Tags and tiles */
-  i.tag, i.st { font-style: normal; }
-  .tag { display: inline-block; font-size: 10.5px; line-height: 1.4; border-radius: 2px; padding: 2px 6px 1px; vertical-align: 2px; white-space: nowrap; margin-right: 7px; border: 1px solid transparent; }
-  .tag.est { background: var(--sup); border-color: var(--sup); color: var(--bg); }
-  .tag.part { background: var(--sup-bg); border-color: color-mix(in srgb, var(--sup) 45%, transparent); color: var(--sup); }
-  .tag.fail { background: var(--ag); border-color: var(--ag); color: var(--bg); }
-  .tag.nyt { border-color: var(--rule-strong); color: var(--na); }
+  /* Tiles */
+  .st { font-style: normal; display: inline-block; font-size: 12px; line-height: 1.4; letter-spacing: 0.01em; text-transform: none; border-radius: 999px; padding: 3px 10px 2px; border: 1.5px solid var(--sup); white-space: nowrap; }
+  .st.s { background: var(--sup); color: #ffffff; }
+  .st.i { color: var(--sup-t); background: var(--bg); }
+  .st.i.m { color: var(--accent); border-color: var(--accent); }
+  .st.n { background: transparent; border: 1.5px dashed var(--na-line); color: var(--na); }
+  .st.a { background: var(--ag); border-color: var(--ag); color: #ffffff; }
   .tiles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-  .st { display: inline-block; font-size: 10.5px; line-height: 1.4; letter-spacing: 0.02em; text-transform: none; border-radius: 999px; padding: 3px 10px 2px; border: 1.5px solid var(--sup); white-space: nowrap; }
-  .st.s { background: var(--sup); color: var(--bg); }
-  .st.i { color: var(--sup); background: transparent; }
-  .st.a { background: var(--ag); border-color: var(--ag); color: var(--bg); }
-  .st.us { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--accent); }
-  .none { margin-top: 14px; font-style: italic; color: var(--faint); font-size: 14.5px; }
-  .keys { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; margin: 22px 0 0; font-size: 15.5px; color: var(--muted); }
+  .keys { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 22px 0 0; font-size: 15.5px; color: var(--muted); }
   .keys span { display: inline-flex; align-items: center; gap: 8px; }
-  .keys .tag, .keys .st { margin: 0; }
-  .keys + .keys { margin-top: 10px; }
+  .keys .st { margin: 0; }
+  .keys .star { font-style: italic; margin-left: 10px; }
 
-  /* The content x criteria table */
-  .ct { margin-top: 40px; width: min(1320px, 100vw - 48px); margin-left: 50%; transform: translateX(-50%); }
-  .ct table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; border-top: 2px solid var(--accent); }
-  .ct thead th { position: sticky; top: 0; z-index: 2; background: var(--card); text-align: left; vertical-align: top; font-size: 12px; line-height: 1.5; color: var(--soft); padding: 12px 16px 12px; border-bottom: 1px solid var(--rule-strong); }
-  .ct thead th i { display: block; font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--muted); margin-top: 2px; }
-  .ct thead th:nth-child(1) { width: 17%; }
-  .ct thead th.m { background: var(--meta-bg); color: var(--accent); }
-  .ct tbody th, .ct tbody td { text-align: left; vertical-align: top; padding: 18px 16px 20px; border-bottom: 1px solid var(--rule); }
-  .ct tbody td { font-size: 15.5px; line-height: 1.5; color: var(--soft); border-left: 1px solid var(--rule); text-wrap: pretty; }
-  .ct tbody td.m { background: var(--meta-bg); }
+  /* The capacities x criteria table */
+  .ct { margin-top: 32px; width: min(1320px, 100vw - 48px); margin-left: 50%; transform: translateX(-50%); }
+  .ct table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+  .ct thead th { position: sticky; top: 0; z-index: 2; background: var(--card); text-align: left; vertical-align: top; font-size: 13px; line-height: 1.4; color: var(--ink); padding: 12px 16px 12px; border-top: 4px solid var(--sup); border-bottom: 2px solid var(--rule-strong); }
+  .ct thead th:first-child { border-top-color: var(--ink); }
+  .ct thead th i { display: block; font-family: var(--mono); font-style: normal; font-weight: 500; font-size: 13px; letter-spacing: 0.01em; text-transform: none; color: var(--muted); margin-top: 3px; }
+  .ct thead th:nth-child(1) { width: 16%; }
+  .ct thead th.m { border-top-color: var(--accent); }
+  .ct tbody th, .ct tbody td { text-align: left; vertical-align: top; padding: 16px 16px 18px; border-bottom: 1px solid var(--rule); }
+  .ct tbody td { font-size: 15px; line-height: 1.5; color: var(--soft); border-left: 1px solid var(--rule); text-wrap: pretty; }
+  .ct tbody td.m { background: var(--meta-cell); }
   .ct tbody th { font-weight: 400; }
-  .ct h3 { font-size: 20px; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 6px; }
-  .ct h3 + p { font-size: 14.5px; line-height: 1.42; font-style: italic; color: var(--muted); margin: 0; }
-  .ct .alt { display: block; margin-top: 8px; font-size: 14px; font-style: italic; color: var(--muted); }
-  .ct tr.use > * { border-top: 1px dashed var(--rule-strong); }
-  .ct tr.asym th { font-family: var(--mono); font-weight: 600; font-size: 12px; letter-spacing: 0.045em; text-transform: uppercase; color: var(--ink); vertical-align: top; padding-top: 20px; }
-  .ct tr.asym td { font-size: 17px; line-height: 1.55; color: var(--ink); border-bottom: 0; padding-top: 18px; }
-  .ct tr.asym td b { font-weight: 600; }
-  .ct-intro { font-size: 15.5px; color: var(--muted); }
+  .ct h3 { font-size: 21px; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 6px; }
+  .ct h3 + p { font-size: 15px; line-height: 1.4; font-style: italic; color: var(--muted); margin: 0; }
+  .ct .status { margin: 12px 0 0; font-family: var(--mono); font-size: 12px; line-height: 1.4; color: var(--faint); }
+  .ct .status b { font-weight: 700; }
+  .ct .status span { display: block; margin-top: 4px; }
+  .ct td p { margin: 0 0 6px; }
+  .ct td p.alt { margin-top: 8px; }
+  .cite, .prose .cite { font-family: var(--mono); font-size: 0.72em; color: var(--r1); white-space: nowrap; }
+  .ct .cite { font-family: var(--mono); font-size: 12.5px; color: var(--r1); white-space: nowrap; }
+  .ct .prop { color: var(--faint); }
+  .ct tr.grp th { font-family: var(--mono); font-weight: 600; font-size: 12.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--card); border-top: 3px solid var(--ink); padding: 12px 16px; }
 
   /* Our work */
   .mains { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--ink); }
@@ -243,18 +274,29 @@
   .next b { display: block; font-size: 19px; line-height: 1.5; font-weight: 400; color: var(--body); }
   .next span { display: block; font-size: 16.5px; line-height: 1.5; font-style: italic; color: var(--muted); }
 
-  /* Philosophers */
-  .tiers { margin: 0; display: grid; grid-template-columns: 230px 1fr; border-top: 1px solid var(--ink); }
-  .tiers dt, .tiers dd { margin: 0; padding: 18px 0 18px; border-bottom: 1px solid var(--rule); }
-  .tiers dt { padding-left: 16px; border-left: 3px solid var(--k, var(--rule-strong)); }
-  .tiers dt b { display: block; font-size: 12px; line-height: 1.5; color: var(--ink); }
-  .tiers dt span { display: block; font-size: 14.5px; line-height: 1.4; font-style: italic; color: var(--muted); margin-top: 3px; }
-  .tiers dd { padding-left: 24px; font-size: 18px; line-height: 1.55; color: var(--body); }
-  .tiers dt.d { border-left-style: dashed; }
+
+  /* Sources */
+  .sources ol { margin: 0; padding-left: 28px; columns: 2; column-gap: 44px; font-family: var(--mono); font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+  .sources li { break-inside: avoid; margin-bottom: 8px; padding-left: 4px; }
+  .sources a { color: inherit; }
 
   footer { max-width: 820px; margin: 96px auto 0; padding: 0 30px; }
   footer div { padding: 30px 0 64px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; font-size: 12.5px; line-height: 1.8; color: var(--muted); }
 
+  @media (min-width: 1140px) {
+    main { max-width: 1244px; padding: 0 332px 0 252px; }
+    footer { max-width: 1244px; padding: 0 32px; }
+    .topbar { margin-left: -220px; margin-right: -300px; margin-bottom: 96px; }
+    .head h1, .head .byline, .keys, .mains, .sources ol { margin-right: -300px; }
+    h1 { font-size: 66px; line-height: 1.04; max-width: none; margin-bottom: 28px; }
+    .thesis p { font-size: 22px; }
+    h2 { font-size: 40px; }
+    h2::before { position: absolute; left: -220px; top: 32px; width: 180px; margin: 0; }
+    .prose { font-size: 20.5px; max-width: none; }
+    .sn { float: right; clear: right; width: 260px; margin: 0.35em -300px 18px 0; }
+    .chains .scroller, .ct { width: auto; margin-left: -220px; margin-right: -300px; transform: none; }
+    .routes { margin-right: -300px; }
+  }
   @media (max-width: 1000px) {
     .ct { width: auto; margin-left: 0; transform: none; }
     .ct thead { display: none; }
@@ -268,25 +310,25 @@
     .ct tbody td.m { padding: 12px 14px 14px; background: var(--meta-bg); }
     .ct tbody td::before { content: attr(data-l); display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
     .ct tbody td.m::before { color: var(--accent); }
-    .ct tr.asym td { margin-top: 8px; }
-    .ct tr.asym td::before { display: none; }
+    .ct tr.grp th { padding: 10px 0; background: none; border-top: 0; }
+    .ct tr.grp { border-top: 3px solid var(--ink); padding: 0; }
+    .ct tbody td .tiles { margin-top: 10px; }
+    .routes { grid-template-columns: 1fr; }
   }
   @media (max-width: 700px) {
     main, footer { padding-left: 22px; padding-right: 22px; }
     .head { padding-top: 36px; }
     .eyebrow { margin-bottom: 18px; }
     h1 { font-size: 35px; margin-bottom: 22px; }
-    .thesis { margin-top: 32px; padding: 20px 20px 22px; }
-    .thesis p { font-size: 21px; }
+    .thesis { margin-top: 28px; padding: 16px 18px 18px; }
+    .thesis p { font-size: 19px; }
     section { margin-top: 68px; }
     h2 { font-size: 24px; }
     .prose, .next b { font-size: 18.5px; }
-    .chains .wide { display: none; }
-    .chains .tall { display: block; }
+    .chains .scroller { width: auto; margin-left: -22px; margin-right: -22px; padding: 0 22px; transform: none; }
+    .chains .hint { display: block; }
+    .sources ol { columns: 1; }
     .panels { grid-template-columns: 1fr; }
-    .tiers { grid-template-columns: 1fr; }
-    .tiers dt { border-bottom: 0; padding-bottom: 4px; }
-    .tiers dd { padding: 6px 0 18px 19px; border-left: 3px solid transparent; }
   }
   @media (prefers-reduced-motion: reduce) { details.data summary { transition: none; } html { scroll-behavior: auto; } }
 </style>
@@ -296,162 +338,163 @@
 <main>
 
 <header class="head">
-  <p class="eyebrow">NYU Workshop on Introspection and Self Reports in Language Models</p>
+  <div class="topbar">
+    <p class="eyebrow">NYU Workshop on Introspection and Self-Report in Language Models</p>
+    <nav aria-label="Sections"><a href="#motivation">Motivation</a><a href="#routes">Routes</a><a href="#criteria">Criteria</a><a href="#ours">Our work</a><a href="#sources">Sources</a></nav>
+  </div>
   <h1>Problems for Language Model Introspection</h1>
   <p class="byline">
     <b>Juan Cadile</b>, University of Rochester, Department of Philosophy · <a href="mailto:jcadile@ur.rochester.edu">jcadile@ur.rochester.edu</a> · <a href="https://juancadile.com">juancadile.com</a><br>
     <b>Nick Meyer</b>, Columbia University, Department of Computer Science · <a href="mailto:nick.meyer@columbia.edu">nick.meyer@columbia.edu</a> · <a href="https://nickmeyer.xyz">nickmeyer.xyz</a>
   </p>
   <div class="thesis">
-    <p>Claims about LM introspection concern distinct capacities with different evidential demands. Current evidence partly supports first-order state sensitivity, but no study has yet demonstrated metacognitive representation.</p>
+    <p>Claims of LM introspection concern distinct capacities with different evidential demands. Current evidence meets some first-order criteria, but none of the studies we review meets them together or shows metacognitive representation.</p>
   </div>
 </header>
 
-<section>
-  <h2>The problem</h2>
+<section id="motivation">
+  <h2 data-k="Motivation">Motivation</h2>
   <div class="prose">
-    <p>Language models (LMs) can produce reports about their own internal states, that much is clear. Whether these reports surface from a process we’d call introspection is less clear, and contested.</p>
+    <p>Language models (LMs) produce reports that describe their own internal states. Whether these reports surface from a process we’d be inclined to call introspection is less clear—and contested.</p>
     <p>Part of the problem is conceptual imprecision: different papers use the same term for different capacities, or different terms for the same capacity. Consequently, results presented as supporting or challenging “introspection” often bear on different claims.</p>
     <p>Here, we attempt to make this more clear by: 1) <b>defining</b> introspection for language models, 2) <b>operationalizing</b> its study into one framework, and 3) <b>evaluating</b> existing empirical claims under this framework.</p>
   </div>
 </section>
 
-<section>
-  <h2>One self-report, four causal routes</h2>
+<section id="routes">
+  <h2 data-k="Routes">Four routes to a self-report</h2>
   <figure class="chains">
-    <svg class="wide" viewBox="0 0 760 294" role="img" aria-label="Four causal routes from input to report: an input-level route that bypasses S1, an output-mediated route that infers S1 from the model’s own earlier output, a first-order route through S1 only, and a higher-order route through S2, a state that represents S1.">
-      <defs>
-        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah2" d="M0 0L10 5L0 10z"/></marker>
-        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah1" d="M0 0L10 5L0 10z"/></marker>
-        <marker id="a0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah0" d="M0 0L10 5L0 10z"/></marker>
-        <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah3" d="M0 0L10 5L0 10z"/></marker>
-      </defs>
-      <path class="p3" d="M214 88 V30 H52 V92" marker-end="url(#a3)"/>
-      <text class="sm om" x="133" y="21" text-anchor="middle">written, then read as text</text>
-      <g transform="translate(0 64)">
-      <path class="p0" d="M52 92 V200 H660 V96" marker-end="url(#a0)"/>
-      <path class="p1" d="M210 104 V172 H640 V96" marker-end="url(#a1)"/>
-      <path class="p2" d="M96 58 H150" marker-end="url(#a2)"/>
-      <path class="p1" d="M96 66 H150" marker-end="url(#a1)"/>
-      <path class="p2" d="M268 62 H342" marker-end="url(#a2)"/>
-      <path class="p2" d="M538 62 H604" marker-end="url(#a2)"/>
-      <rect class="box" x="8" y="32" width="88" height="60" rx="2"/>
-      <text class="boxt" x="52" y="66" text-anchor="middle">INPUT</text>
-      <path class="cl" d="M168 82 a18 18 0 0 1 -6 -30 a22 22 0 0 1 30 -22 a26 26 0 0 1 42 -4 a22 22 0 0 1 32 14 a18 18 0 0 1 2 34 a22 22 0 0 1 -30 14 a28 28 0 0 1 -40 2 a22 22 0 0 1 -30 -8z"/>
-      <text class="big" x="212" y="62" text-anchor="middle">S1</text>
-      <text class="sm" x="212" y="82" text-anchor="middle">first-order state</text>
-      <path class="cl2" d="M366 98 a26 26 0 0 1 -12 -40 a30 30 0 0 1 44 -28 a38 38 0 0 1 62 -10 a32 32 0 0 1 50 16 a26 26 0 0 1 14 44 a30 30 0 0 1 -42 20 a40 40 0 0 1 -60 4 a32 32 0 0 1 -56 -6z"/>
-      <path class="ghost" d="M456 86 a12 12 0 0 1 -4 -22 a16 16 0 0 1 22 -14 a18 18 0 0 1 30 0 a14 14 0 0 1 14 20 a14 14 0 0 1 -12 18 a18 18 0 0 1 -26 4 a14 14 0 0 1 -24 -6z"/>
-      <text class="big" x="388" y="62">S2</text>
-      <text class="sm" x="378" y="88">metacognitive state</text>
-      <text class="big g" x="486" y="76" text-anchor="middle">S1</text>
-      <rect class="box" x="606" y="32" width="96" height="60" rx="2"/>
-      <text class="boxt" x="654" y="66" text-anchor="middle">REPORT</text>
-      </g>
+    <div class="scroller">
+    <svg viewBox="-20 0 1880 492" role="img" aria-label="Four routes from the target state to a generated report. The target is S1′, the state during earlier tokens. Route 1, dashed grey, runs from the input to the report and does not use the target state. Route 2, dashed amber, runs from S1′ into the earlier output tokens and from the input to the report; it may pass through S1. Route 3, solid teal, runs from the input and, by attention, from S1′ to S1, and from S1 to the report. Route 4, solid purple, takes the same step into S1, then runs through S2, a metacognitive state that represents S1, to the report.">
+      <defs><marker id="rh1" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path class="f1" d="M0 0 L4 2 L0 4 Z"/></marker><marker id="rh2" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path class="f2" d="M0 0 L4 2 L0 4 Z"/></marker><marker id="rh3" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path class="f3" d="M0 0 L4 2 L0 4 Z"/></marker><marker id="rh4" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path class="f4" d="M0 0 L4 2 L0 4 Z"/></marker></defs>
+      <path class="ln r1" d="M520 152 H590 V24 H1820 V130" marker-end="url(#rh1)"/>
+      <path class="ln r2s" d="M226 264 H287" marker-end="url(#rh2)"/>
+      <path class="ln r2" d="M410 318 V448 H1800 V286" marker-end="url(#rh2)"/>
+      <path class="ln r3" d="M850 270 V396 H1700 V286" marker-end="url(#rh3)"/>
+      <path class="ln r4" d="M996 208 H1075" marker-end="url(#rh4)"/>
+      <path class="ln r4" d="M1553 208 H1627" marker-end="url(#rh4)"/>
+      <g transform="translate(520 196)"><path class="ln r4" d="M 0 9 L 151 9"/><path class="ln r3" d="M 0 15 L 151 15"/><path class="f4" d="M 150 0 L 174 12 L 150 12 Z"/><path class="f3" d="M 150 12 L 174 12 L 150 24 Z"/></g>
+      <g transform="translate(100 250)"><path class="ln r3" d="M 12 50 L 12 141 L 663 141 L 663 42" stroke-linejoin="miter"/><path class="ln r4" d="M 18 50 L 18 135 L 657 135 L 657 42" stroke-linejoin="miter"/><path class="f4" d="M 648 42 L 660 18 L 660 42 Z"/><path class="f3" d="M 660 42 L 660 18 L 672 42 Z"/></g>
+      <svg x="-19" y="179" width="273" height="149" viewBox="10 3 182 128" preserveAspectRatio="none" overflow="visible"><path class="cloud past" d="M 30 90 A 24 24 0 0 1 30 44 A 22 22 0 0 1 60 20 A 26 26 0 0 1 102 12 A 26 26 0 0 1 145 20 A 22 22 0 0 1 172 44 A 24 24 0 0 1 172 90 A 22 22 0 0 1 140 114 A 24 24 0 0 1 100 120 A 24 24 0 0 1 60 114 A 22 22 0 0 1 30 90 Z" vector-effect="non-scaling-stroke"/></svg>
+      <text class="big past-t" x="115" y="246" text-anchor="middle" style="font-size: 40px">S1′</text>
+      <text class="sub past-t" x="115" y="273" text-anchor="middle" style="font-size: 20px">state during</text>
+      <text class="sub past-t" x="115" y="295" text-anchor="middle" style="font-size: 20px">earlier tokens</text>
+      <text class="lab" x="410" y="80" text-anchor="middle">INPUT</text>
+      <rect class="box" x="301" y="97" width="218" height="110" rx="4"/>
+      <rect class="box" x="301" y="207" width="218" height="112" rx="4"/>
+      <text class="boxt" x="410" y="161" text-anchor="middle">prompt tokens</text>
+      <text class="boxt" x="410" y="256" text-anchor="middle">earlier output</text>
+      <text class="boxt" x="410" y="287" text-anchor="middle">tokens</text>
+      <svg x="690" y="123" width="310" height="170" viewBox="10 3 182 128" preserveAspectRatio="none" overflow="visible"><path class="cloud " d="M 30 90 A 24 24 0 0 1 30 44 A 22 22 0 0 1 60 20 A 26 26 0 0 1 102 12 A 26 26 0 0 1 145 20 A 22 22 0 0 1 172 44 A 24 24 0 0 1 172 90 A 22 22 0 0 1 140 114 A 24 24 0 0 1 100 120 A 24 24 0 0 1 60 114 A 22 22 0 0 1 30 90 Z" vector-effect="non-scaling-stroke"/></svg>
+      <text class="big" x="845" y="209" text-anchor="middle">S1</text>
+      <text class="sub" x="845" y="244" text-anchor="middle">first-order state</text>
+      <svg x="1080" y="78" width="480" height="260" viewBox="10 3 182 128" preserveAspectRatio="none" overflow="visible"><path class="cloud meta" d="M 30 90 A 24 24 0 0 1 30 44 A 22 22 0 0 1 60 20 A 26 26 0 0 1 102 12 A 26 26 0 0 1 145 20 A 22 22 0 0 1 172 44 A 24 24 0 0 1 172 90 A 22 22 0 0 1 140 114 A 24 24 0 0 1 100 120 A 24 24 0 0 1 60 114 A 22 22 0 0 1 30 90 Z" vector-effect="non-scaling-stroke"/></svg>
+      <text class="big" x="1144" y="209">S2</text>
+      <text class="sub" x="1144" y="244">metacognitive state</text>
+      <svg x="1330" y="148" width="200" height="120" viewBox="10 3 182 128" preserveAspectRatio="none" overflow="visible"><path class="cloud ghost" d="M 30 90 A 24 24 0 0 1 30 44 A 22 22 0 0 1 60 20 A 26 26 0 0 1 102 12 A 26 26 0 0 1 145 20 A 22 22 0 0 1 172 44 A 24 24 0 0 1 172 90 A 22 22 0 0 1 140 114 A 24 24 0 0 1 100 120 A 24 24 0 0 1 60 114 A 22 22 0 0 1 30 90 Z" vector-effect="non-scaling-stroke"/></svg>
+      <text class="big ghost-t" x="1430" y="223" text-anchor="middle" style="font-size: 44px">S1</text>
+      <text class="lab" x="1740" y="124" text-anchor="middle">OUTPUT</text>
+      <rect class="box" x="1641" y="144" width="198" height="128" rx="4"/>
+      <text class="boxt" x="1740" y="202" text-anchor="middle">generated</text>
+      <text class="boxt" x="1740" y="233" text-anchor="middle">report</text>
+      <text class="att" x="610" y="366" text-anchor="middle">attention</text>
+      <circle class="badge" cx="1200" cy="24" r="17.5" style="stroke: var(--r1)"/><text class="badge-t" x="1200" y="32" text-anchor="middle" style="fill: var(--r1-t)">1</text>
+      <circle class="badge" cx="1150" cy="448" r="17.5" style="stroke: var(--om)"/><text class="badge-t" x="1150" y="456" text-anchor="middle" style="fill: var(--om-t)">2</text>
+      <text class="om-t" x="1182" y="475">may pass through S1</text>
+      <circle class="badge" cx="1275" cy="396" r="17.5" style="stroke: var(--sup)"/><text class="badge-t" x="1275" y="404" text-anchor="middle" style="fill: var(--sup-t)">3</text>
+      <circle class="badge" cx="1586" cy="208" r="17.5" style="stroke: var(--accent)"/><text class="badge-t" x="1586" y="216" text-anchor="middle" style="fill: var(--accent)">4</text>
     </svg>
-    <svg class="tall" viewBox="0 0 350 470" role="img" aria-label="Four causal routes from input to report: an input-level route that bypasses S1, an output-mediated route that infers S1 from the model’s own earlier output, a first-order route through S1 only, and a higher-order route through S2, a state that represents S1.">
-      <path class="p0" d="M108 56 H18 V438 H96" marker-end="url(#a0)"/>
-      <path class="p1" d="M210 140 H300 V420 H246" marker-end="url(#a1)"/>
-      <path class="p2" d="M164 70 V104" marker-end="url(#a2)"/>
-      <path class="p1" d="M176 70 V104" marker-end="url(#a1)"/>
-      <path class="p2" d="M170 178 V218" marker-end="url(#a2)"/>
-      <path class="p2" d="M170 350 V396" marker-end="url(#a2)"/>
-      <rect class="box" x="110" y="12" width="120" height="56" rx="2"/>
-      <text class="boxt" x="170" y="45" text-anchor="middle">INPUT</text>
-      <path class="cl" d="M128 166 a18 18 0 0 1 -6 -30 a22 22 0 0 1 30 -22 a26 26 0 0 1 42 -4 a22 22 0 0 1 32 14 a18 18 0 0 1 2 34 a22 22 0 0 1 -30 14 a28 28 0 0 1 -40 2 a22 22 0 0 1 -30 -8z"/>
-      <text class="big" x="172" y="146" text-anchor="middle">S1</text>
-      <text class="sm" x="172" y="166" text-anchor="middle">first-order state</text>
-      <path class="cl2" d="M84 330 a26 26 0 0 1 -12 -40 a30 30 0 0 1 20 -54 a38 38 0 0 1 62 -12 a32 32 0 0 1 60 6 a26 26 0 0 1 26 42 a30 30 0 0 1 -6 50 a40 40 0 0 1 -60 14 a32 32 0 0 1 -90 -6z"/>
-      <path class="ghost" d="M150 316 a12 12 0 0 1 -4 -22 a16 16 0 0 1 22 -14 a18 18 0 0 1 30 0 a14 14 0 0 1 14 20 a14 14 0 0 1 -12 18 a18 18 0 0 1 -26 4 a14 14 0 0 1 -24 -6z"/>
-      <text class="big" x="104" y="262">S2</text>
-      <text class="sm" x="104" y="282">metacognitive state</text>
-      <text class="big g" x="180" y="306" text-anchor="middle">S1</text>
-      <rect class="box" x="98" y="398" width="144" height="56" rx="2"/>
-      <path class="p3" d="M226 124 H332 V40 H234" marker-end="url(#a3)"/>
-      <text class="sm om" x="283" y="30" text-anchor="middle">read as text</text>
-      <text class="boxt" x="170" y="431" text-anchor="middle">REPORT</text>
-    </svg>
-    <ul class="chainkey">
-      <li class="d"><b style="--kt: var(--muted)">Input-level chain:</b> The report bypasses S1: it does not depend on the state it describes.</li>
-      <li class="o"><b style="--kt: var(--om)">Output-mediated chain:</b> The report infers S1 from the model’s earlier output rather than accessing S1 internally.</li>
-      <li style="--k: var(--sup)"><b style="--kt: var(--sup)">First-order (only) chain:</b> The report depends on S1, but on no metacognitive state.</li>
-      <li style="--k: var(--accent)"><b style="--kt: var(--accent)">Higher-order chain:</b> The report depends on S2, a state that represents S1 as a state.</li>
-    </ul>
-    <p class="chainnote">Both first-order and higher-order reports can pass the first-order tests in the table below, but only tests that target S2 can distinguish metacognition.</p>
+    </div>
+    <p class="hint">Scroll sideways to see the whole diagram.</p>
+    <div class="routes">
+      <div>
+        <p>The target is S1′, the state the model was in when it wrote the earlier tokens. S1 is the model’s current state, which may carry information about S1′. Asked to report on the target, the model can:</p>
+        <ul class="routekey">
+          <li class="d" style="--k: var(--r1)"><b style="--kt: var(--r1-t)">1. Not use the target state at all.</b> It can read a cue in the prompt or confabulate an answer.</li>
+          <li class="d" style="--k: var(--om)"><b style="--kt: var(--om-t)">2. Infer the answer from its own earlier output tokens.</b> S1′ shaped what the model wrote, and the model works backward from that text to what S1′ “must” have been. The report depends on S1′, but only through the tokens.</li>
+          <li style="--k: var(--sup)"><b style="--kt: var(--sup-t)">3. Use state S1 directly</b> to make its report.</li>
+          <li style="--k: var(--accent)"><b style="--kt: var(--accent)">4. Use a higher-order state S2,</b> which represents S1, to make its report.</li>
+          <li class="both rule"><b>Step that routes 3 and 4 share</b>. From the input, S1 takes in the tokens. From S1′, attention copies information from earlier positions forward.</li>
+          <li class="plain"><b>Dashed lines</b> indicate information routing through tokens.<br><b>Solid lines</b> indicate it moving through activations.</li>
+        </ul>
+      </div>
+      <div>
+        <p>For routes 3 and 4, S1 at the reporting position can get its information about the state in two ways: directly from S1′, when the state is still present at the reporting position, or through attention to S1′, which copies information forward from earlier positions without going through tokens.</p>
+        <p>Routes 3 and 4 count as internal only if S1 gets its information in one of these two ways. If S1 represents S1′ only because the model read its own earlier output tokens, the report is route 2, even though it passes through S1.</p>
+        <p class="key">Routes 3 and 4 can both meet the first three criteria in the table below. Only tests that specifically target state S2 can separate them.</p>
+      </div>
+    </div>
   </figure>
 </section>
 
-<section>
-  <h2>Ascribing introspection: capacities and criteria</h2>
+<section id="criteria">
+  <h2 data-k="Criteria">Ascribing introspection: capacities and criteria</h2>
   <div class="prose">
-    <p>We adapt four evidential criteria from Lindsey (2025): <b>accuracy</b>, <b>grounding</b>, <b>internality</b>, and <b>metacognitive representation</b>. Rows are capacities discussed in the literature under the label “introspection”; columns ask what evidence each capacity must satisfy before it supports an introspective ascription. Meeting the first three criteria establishes a first-order route from internal state to report. Only the fourth distinguishes a metacognitive route. Each test must also control for known confounds and causal bypasses (Morris &amp; Plunkett, 2025).</p>
-    <p>The capacities are ordered from coarse to fine: detecting that something occurred, locating it, identifying its content and source, and characterizing it relative to other states. Evidence for a coarser capacity does not establish a finer one. Control is included separately as a possible use of introspective information.</p>
+    <p><span class="sn"><b>[1]</b>Lindsey, J. (2025). <i>Emergent Introspective Awareness in Large Language Models.</i> <a href="https://transformer-circuits.pub/2025/introspection">transformer-circuits.pub</a></span>Following Lindsey <span class="cite">[1]</span>, we take introspection in its robust sense to be producing a report about an internal state that is accurate, grounded in it, derived from internal activations, and mediated by a metacognitive representation of it. Each row is one of <b>seven capacities</b> that studies in the literature have associated with, or labeled as, “introspection.” The first six are ordered from coarse to fine: detecting that something occurred (and whether this depends on what it is), locating it, identifying its content and its source, and characterizing it relative to other states. The seventh, control, is not a further level of grain but a use of the others: control counts as introspective only when a reading of the current state guides the change. <b>Evidence for a given capacity supports an ascription of introspection for that capacity only.</b> Tests of a finer capacity often presuppose a coarser one (asking <i>where</i> a perturbation is tells the model that there is one). So evidence for a coarser capacity does not establish a finer one, and evidence for a finer capacity cannot establish a coarser one.</p>
+    <p>The columns ask <b>what evidence each capacity must meet</b> before it supports an ascription of introspective ability. For these, we adapt <b>four evidential criteria from Lindsey <span class="cite">[1]</span>: accuracy, grounding, internality, and metacognitive representation.</b> Each criterion excludes a different alternative explanation. Accuracy excludes guessing; grounding excludes reports that would come out the same whatever the internal state; internality excludes reading the model’s own output; metacognitive representation excludes a mere first-order detector. Results that meet the first three criteria together, for the same reports, can establish a first-order route from internal state to report. Only results that also meet the fourth can distinguish a metacognitive route from a first-order one.</p>
+    <p><span class="sn"><b>[18]</b>Comșa, I. M., &amp; Shanahan, M. (2025). <i>Does It Make Sense to Speak of Introspection in Large Language Models?</i> <a href="https://arxiv.org/abs/2506.05068">arXiv:2506.05068</a></span>Views differ on how many of these criteria introspection needs. On interpretationist views, accuracy and grounding are enough: Comșa &amp; Shanahan <span class="cite">[18]</span> count any accurate report causally linked to the state, including one the model infers from its own output. <b>Because the table scores each criterion separately, it can be read under any of these views.</b> Together, the four are plausibly sufficient, unless introspection also requires acquaintance with phenomenal states, as some views hold. <b>Even then, they are jointly sufficient only when all hold on the same reports, for the same task.</b> Satisfying the criteria is not compositional—it is not enough for studies run under separate experimental regimes to each meet different criteria and “sum to introspection.” Studies can combine only when they test the same reports under matched conditions.</p>
   </div>
-  <div class="keys"><span>One tile per study:</span><span><i class="st s">Sufficient evidence</i></span><span><i class="st i">Insufficient evidence</i></span><span><i class="st a">Evidence against</i></span></div>
-  <div class="keys ct-intro"><span><i class="tag est">Established</i>at least one sufficient study and none against</span><span><i class="tag fail">Failed</i>every study against</span><span><i class="tag part">Partly</i>the rest</span><span><i class="tag nyt">Not yet tested</i>no study yet</span></div>
+  <div class="keys"><span><i class="st s">Met</i></span><span><i class="st i">Insufficient evidence or control</i></span><span><i class="st n">Not tested</i></span><span><i class="st a">Failed in setup</i></span><span class="star">* Blog post or unpublished work</span></div>
 
   <div class="ct">
   <table>
     <thead><tr>
-      <th scope="col">Capacity claimed<i>Coarse ↓ fine</i></th>
+      <th scope="col">Capacity</th>
       <th scope="col">Accuracy<i>Does the report match the target state?</i></th>
-      <th scope="col">Grounding<i>Does the report change because the target state changes—not merely because of textual cues?</i></th>
+      <th scope="col">Grounding<i>Does the report change because the target state changes?</i></th>
       <th scope="col">Internality<i>Is the signal available before—and independently of—the model’s answer?</i></th>
-      <th scope="col" class="m">Metacognitive representation<i>Does another state represent the target state as the model’s own?</i></th>
+      <th scope="col" class="m">Metacognitive representation<i>Does another state represent the target state?</i></th>
     </tr></thead>
     <tbody>
       <tr>
-        <th scope="row"><h3>Detection</h3><p>The model can detect an anomalous phenomena in its internal representations.</p></th>
-        <td data-l="Accuracy"><span class="tag est">Established</span>True positive &gt; false positive on clean trials and on unrelated yes/no questions. This rules out a yes-bias.<div class="tiles"><i class="st s">Lederman &amp; Mahowald</i><i class="st s">Pearson-Vogel</i><i class="st s">Macar et al.</i></div></td>
-        <td data-l="Grounding"><span class="tag est">Established</span>With the prompt held fixed, reports follow the injection. A cue in the prompt alone must not produce them.<div class="tiles"><i class="st s">Lederman &amp; Mahowald</i><i class="st s">Pearson-Vogel</i><i class="st s">Macar et al.</i></div></td>
-        <td data-l="Internality"><span class="tag est">Established</span>The vector is off during the answer, and the signal is already present before generation (in the logits).<div class="tiles"><i class="st s">Lederman &amp; Mahowald</i><i class="st s">Pearson-Vogel</i></div></td>
-        <td data-l="Metacognitive representation" class="m"><span class="tag part">Partly</span>A state that represents “one of my states is unusual.”<span class="alt">First-order alternative: a tripwire, a noetic feeling that guides without representing the state (Proust).</span><div class="tiles"><i class="st i">Macar et al.</i></div></td>
+        <th scope="row"><h3>Detection</h3><p>Is the state perturbed?</p><p class="status"><span><b>First-order route (1–3):</b> not yet shown together</span><span><b>Metacognitive (4):</b> not yet shown</span></p></th>
+        <td data-l="Accuracy"><p class="show"><b>Show:</b> the model reports a perturbation more often on perturbed trials than on clean trials <span class="cite">[1, 2]</span>.</p><p class="ctl"><b>Controls:</b> clean trials, with more hits than false alarms <span class="cite">[1–4]</span>; detection asked alone, apart from identification <span class="cite">[5–8]</span>.</p><div class="tiles"><i class="st s">Lindsey</i><i class="st i">Godet (a)*</i><i class="st s">Fonseca Rivera &amp; Africa</i><i class="st i">Hahami et al. (a)</i><i class="st i">Pearson-Vogel et al.</i><i class="st s">Lederman &amp; Mahowald</i><i class="st s">Macar et al.</i><i class="st s">Singh et al.</i><i class="st i">Sridharan*</i><i class="st i">Miller &amp; Demarest*</i></div></td>
+        <td data-l="Grounding"><p class="show"><b>Show:</b> detection is caused by the perturbation itself, not by a general side effect on yes/no answers <span class="cite">[1, 6–8]</span>.</p><p class="ctl"><b>Controls:</b> the same injection on unrelated questions whose answer is “no” <span class="cite">[1, 3, 5–10]</span>; the inverse question (“is your state normal?”) <span class="cite">[7, 8]</span>; the same question about a third party <span class="cite">[9]</span>; the same prompt across conditions <span class="cite">[1, 2, 6, 7]</span>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st a">Godet (a)*</i><i class="st n">Fonseca Rivera &amp; Africa</i><i class="st a">Hahami et al. (a)</i><i class="st i">Pearson-Vogel et al.</i><i class="st i">Lederman &amp; Mahowald</i><i class="st i">Macar et al.</i><i class="st i">Singh et al.</i><i class="st i">Sridharan*</i><i class="st a">Miller &amp; Demarest*</i></div></td>
+        <td data-l="Internality"><p class="show"><b>Show:</b> the detection signal reaches the answer through activations, not through the model’s own output <span class="cite">[1]</span>.</p><p class="ctl"><b>Controls:</b> vector off during the answer <span class="cite">[3, 9, 11]</span>; first-token readout <span class="cite">[3, 5, 6, 8, 11]</span>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st i">Godet (a)*</i><i class="st i">Fonseca Rivera &amp; Africa</i><i class="st s">Hahami et al. (a)</i><i class="st s">Pearson-Vogel et al.</i><i class="st s">Lederman &amp; Mahowald</i><i class="st s">Macar et al.</i><i class="st s">Singh et al.</i><i class="st i">Sridharan*</i><i class="st i">Miller &amp; Demarest*</i></div></td>
+        <td data-l="Metacognitive representation" class="m"><p class="show"><b>Show:</b> a separate state represents “my state is perturbed,” and the report runs through it.</p><p class="ctl"><b>Controls:</b> patching that state into clean trials gives “yes” (cf. <span class="cite">[2, 4]</span>), without flipping unrelated questions <i class="prop">(proposed)</i>; the state does not respond to odd prompt text <i class="prop">(proposed; cf. <span class="cite">[11]</span>)</i>; the same state drives other self-reports <i class="prop">(proposed)</i>.</p><p class="alt"><b>First-order alternative:</b> a feeling that guides the report without representing the state.</p><div class="tiles"><i class="st n">Lindsey</i><i class="st n">Godet (a)*</i><i class="st i m">Fonseca Rivera &amp; Africa</i><i class="st n">Hahami et al. (a)</i><i class="st n">Pearson-Vogel et al.</i><i class="st n">Lederman &amp; Mahowald</i><i class="st i m">Macar et al.</i><i class="st n">Singh et al.</i><i class="st n">Sridharan*</i><i class="st n">Miller &amp; Demarest*</i></div></td>
       </tr>
       <tr>
-        <th scope="row"><h3>Content-sensitive detection</h3><p>The model's capacity of detection depends on what was injected.</p></th>
-        <td data-l="Accuracy"><span class="tag est">Established</span>Concept vectors are detected more often than norm-matched random vectors, across concepts and models.<div class="tiles"><i class="st s">Rivera &amp; Africa</i><i class="st s">Mayner</i><i class="st s us">Cadile &amp; Meyer</i></div></td>
-        <td data-l="Grounding"><span class="tag part">Partly</span>The effect comes from the content, not from vector statistics. Controls: matched noise, the mean concept vector, and same-family vectors.<div class="tiles"><i class="st i">Rivera &amp; Africa</i><i class="st a">Mayner</i><i class="st a us">Cadile &amp; Meyer</i></div></td>
-        <td data-l="Internality"><span class="tag nyt">Not yet tested</span>As for detection: the vector is off during the answer.<p class="none">No study yet</p></td>
-        <td data-l="Metacognitive representation" class="m"><span class="tag nyt">Not yet tested</span>A state that represents “an unusual state with this kind of content is present.”<span class="alt">First-order alternative: a tripwire that only some contents set off.</span><p class="none">No study yet</p></td>
+        <th scope="row"><h3>Content-sensitive detection</h3><p>Does the perturbation carry content?</p><p class="status"><span><b>First-order route (1–3):</b> not yet shown together</span><span><b>Metacognitive (4):</b> not yet shown</span></p></th>
+        <td data-l="Accuracy"><p class="show"><b>Show:</b> the model detects concept injections more often than content-free injections of equal norm (vector size) <span class="cite">[4]</span>.</p><p class="ctl"><b>Controls:</b> random vectors of the same norm <span class="cite">[4]</span>; random vectors that disrupt output as much <i class="prop">(proposed)</i>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st i">Godet (a)*</i><i class="st s">Fonseca Rivera &amp; Africa</i><i class="st i">Macar et al.</i><i class="st i">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Grounding"><p class="show"><b>Show:</b> detection is caused by the perturbation’s content, not by content-independent properties such as norm <span class="cite">[2, 4]</span>.</p><p class="ctl"><b>Controls:</b> the mean-concept vector (cf. <span class="cite">[2]</span>); only the content-bearing component swapped at fixed norm (cf. <span class="cite">[2]</span>); vectors for the same concept from several extraction methods <span class="cite">[4]</span>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st n">Godet (a)*</i><i class="st i">Fonseca Rivera &amp; Africa</i><i class="st i">Macar et al.</i><i class="st a">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Internality"><p class="show"><b>Show:</b> the difference between concept and content-free perturbations is present before the model writes anything.</p><p class="ctl"><b>Controls:</b> first-token readout for both vector types in one study <i class="prop">(this work; concept vectors only: <span class="cite">[5, 6, 8]; noise only: [12]</span>)</i>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st n">Godet (a)*</i><i class="st i">Fonseca Rivera &amp; Africa</i><i class="st n">Macar et al.</i><i class="st i">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Metacognitive representation" class="m"><p class="show"><b>Show:</b> the “perturbed” state also differs with whether the perturbation carries content.</p><p class="ctl"><b>Controls:</b> that state differs for concept vs content-free perturbations at matched norm (cf. <span class="cite">[4]</span>).</p><p class="alt"><b>First-order alternative:</b> a tripwire that only some contents set off.</p><div class="tiles"><i class="st n">Lindsey</i><i class="st n">Godet (a)*</i><i class="st i m">Fonseca Rivera &amp; Africa</i><i class="st n">Macar et al.</i><i class="st n">Cadile &amp; Meyer*</i></div></td>
       </tr>
       <tr>
-        <th scope="row"><h3>Localization</h3><p>The model can determine where the anomalous phenomena is located.</p></th>
-        <td data-l="Accuracy"><span class="tag est">Established</span>The model picks the injected position (token, sentence or layer) above chance in a forced choice.<div class="tiles"><i class="st s">Fornasiere</i><i class="st s">Hahami et al.</i><i class="st s us">Cadile &amp; Meyer</i></div></td>
-        <td data-l="Grounding"><span class="tag part">Partly</span>Patching shows that the injection causes the choice, and a note that points elsewhere does not move it.<div class="tiles"><i class="st i">Fornasiere</i><i class="st i">Hahami et al.</i><i class="st a us">Cadile &amp; Meyer</i></div></td>
-        <td data-l="Internality"><span class="tag est">Established</span>The injection is on the prompt, not on the answer, and the model makes the choice with no free generation first.<div class="tiles"><i class="st s">Fornasiere</i><i class="st s">Hahami et al.</i><i class="st s us">Cadile &amp; Meyer</i></div></td>
-        <td data-l="Metacognitive representation" class="m"><span class="tag part">Partly</span>A state that represents “the state at this place is perturbed.”<span class="alt">First-order alternative: a signal tied to a place (cf. tip of the tongue).</span><div class="tiles"><i class="st i us">Cadile &amp; Meyer</i></div></td>
+        <th scope="row"><h3>Localization</h3><p>Where is the perturbation located?</p><p class="status"><span><b>First-order route (1–3):</b> not yet shown together</span><span><b>Metacognitive (4):</b> not yet shown</span></p></th>
+        <td data-l="Accuracy"><p class="show"><b>Show:</b> the model picks out the perturbed position above chance <span class="cite">[5, 10, 12, 13]</span>.</p><p class="ctl"><b>Controls:</b> perturbation cycled across positions <span class="cite">[5, 10, 13]</span>; clean trials with a “none” option <i class="prop">(proposed; cf. <span class="cite">[12]</span>)</i>.</p><div class="tiles"><i class="st s">Hahami et al. (a)</i><i class="st i">Godet (b)*</i><i class="st s">Fornasiere et al.</i><i class="st s">Hahami et al. (b)</i><i class="st s">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Grounding"><p class="show"><b>Show:</b> the reported position is caused by where the perturbation is, not by what the text there says or by a general push away from the “none” option.</p><p class="ctl"><b>Controls:</b> the same text with the perturbation moved <span class="cite">[5, 10, 13]</span>; concept words in the text without injection <i class="prop">(this work; cf. <span class="cite">[9]</span>)</i>; questions not about the perturbation do not pick the perturbed position <i class="prop">(proposed)</i>.</p><div class="tiles"><i class="st i">Hahami et al. (a)</i><i class="st i">Godet (b)*</i><i class="st i">Fornasiere et al.</i><i class="st i">Hahami et al. (b)</i><i class="st i">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Internality"><p class="show"><b>Show:</b> the position is read from activations, with no text written in between.</p><p class="ctl"><b>Controls:</b> injection on prompt positions only <span class="cite">[5, 10, 12, 13]</span>; reading the model’s answer probabilities in a forced choice <span class="cite">[5, 10, 12]</span>.</p><div class="tiles"><i class="st s">Hahami et al. (a)</i><i class="st s">Godet (b)*</i><i class="st s">Fornasiere et al.</i><i class="st s">Hahami et al. (b)</i><i class="st s">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Metacognitive representation" class="m"><p class="show"><b>Show:</b> a state represents “my processing here was perturbed,” apart from how unusual the text there is.</p><p class="ctl"><b>Controls:</b> an equally unexpected piece of text in the same trial <i class="prop">(proposed)</i>.</p><p class="alt"><b>First-order alternative:</b> a signal tied to a place.</p><div class="tiles"><i class="st n">Hahami et al. (a)</i><i class="st n">Godet (b)*</i><i class="st n">Fornasiere et al.</i><i class="st n">Hahami et al. (b)</i><i class="st n">Cadile &amp; Meyer*</i></div></td>
       </tr>
       <tr>
-        <th scope="row"><h3>Identification</h3><p>The model can identify an anomalous phenomena in its internal representations.</p></th>
-        <td data-l="Accuracy"><span class="tag part">Partly</span>The model names the injected concept above chance, with few false alarms on clean trials.<div class="tiles"><i class="st s">Lindsey</i><i class="st i">Pearson-Vogel</i><i class="st i">UK AISI</i><i class="st a us">Cadile &amp; Meyer</i></div></td>
-        <td data-l="Grounding"><span class="tag est">Established</span>The named word follows the vector and beats a text-only baseline.<div class="tiles"><i class="st s">Lindsey</i><i class="st s">Pearson-Vogel</i><i class="st i">UK AISI</i></div></td>
-        <td data-l="Internality"><span class="tag est">Established</span>The vector is cleared before the reply, so the model cannot read the word off its own output.<div class="tiles"><i class="st s">Pearson-Vogel</i><i class="st s">UK AISI</i></div></td>
-        <td data-l="Metacognitive representation" class="m"><span class="tag nyt">Not yet tested</span>R(r(c)): a state about the state r with content c, not only about c.<span class="alt">First-order alternative: direct translation of the vector into a word (Lindsey).</span><p class="none">No study yet</p></td>
+        <th scope="row"><h3>Identification</h3><p>What is the content of the perturbation?</p><p class="status"><span><b>First-order route (1–3):</b> not yet shown together</span><span><b>Metacognitive (4):</b> not yet shown</span></p></th>
+        <td data-l="Accuracy"><p class="show"><b>Show:</b> the model names the injected concept above chance <span class="cite">[1, 3, 4]</span>.</p><p class="ctl"><b>Controls:</b> clean trials <span class="cite">[1]</span>; a “none” option or a correction for default guesses (cf. <span class="cite">[3]</span>).</p><div class="tiles"><i class="st s">Lindsey</i><i class="st s">Fonseca Rivera &amp; Africa</i><i class="st i">Pearson-Vogel et al.</i><i class="st i">Lederman &amp; Mahowald</i><i class="st i">Macar et al.</i><i class="st i">Sridharan*</i><i class="st a">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Grounding"><p class="show"><b>Show:</b> the named concept is caused by the injected concept, not by a cue in the prompt <span class="cite">[1]</span>.</p><p class="ctl"><b>Controls:</b> text priming a different concept <span class="cite">[4]</span>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st i">Fonseca Rivera &amp; Africa</i><i class="st i">Pearson-Vogel et al.</i><i class="st i">Lederman &amp; Mahowald</i><i class="st n">Macar et al.</i><i class="st a">Sridharan*</i><i class="st n">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Internality"><p class="show"><b>Show:</b> the concept is named from activations, not pushed out by an active vector or read off earlier steered text <span class="cite">[1]</span>.</p><p class="ctl"><b>Controls:</b> vector cleared before the question <span class="cite">[3]</span>; no steered output in context <span class="cite">[3]</span>; steered cache vs the same context recomputed unsteered <i class="prop">(proposed)</i>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st n">Fonseca Rivera &amp; Africa</i><i class="st s">Pearson-Vogel et al.</i><i class="st a">Lederman &amp; Mahowald</i><i class="st n">Macar et al.</i><i class="st i">Sridharan*</i><i class="st a">Cadile &amp; Meyer*</i></div></td>
+        <td data-l="Metacognitive representation" class="m"><p class="show"><b>Show:</b> a state represents “my state has content c,” rather than c being translated directly into a word <span class="cite">[1]</span>.</p><p class="ctl"><b>Controls:</b> accuracy not explained by how close the word already is to being output <i class="prop">(proposed; method <span class="cite">[14]</span>)</i>.</p><p class="alt"><b>First-order alternative:</b> direct translation of the vector into a word <span class="cite">[1]</span>.</p><div class="tiles"><i class="st n">Lindsey</i><i class="st n">Fonseca Rivera &amp; Africa</i><i class="st n">Pearson-Vogel et al.</i><i class="st n">Lederman &amp; Mahowald</i><i class="st n">Macar et al.</i><i class="st n">Sridharan*</i><i class="st n">Cadile &amp; Meyer*</i></div></td>
       </tr>
       <tr>
-        <th scope="row"><h3>Source monitoring</h3><p>The model can delineate the source of the anomalous phenomena.</p></th>
-        <td data-l="Accuracy"><span class="tag fail">Failed</span>Given the same content in the prompt, in the activations, or in neither, the model says which.<div class="tiles"><i class="st a">Singh, Linzen &amp; Ravfogel</i><i class="st a">Shah</i></div></td>
-        <td data-l="Grounding"><span class="tag fail">Failed</span>The answer depends on the source, not on cues that differ between the conditions, such as wording or strength.<div class="tiles"><i class="st a">Shah</i></div></td>
-        <td data-l="Internality"><span class="tag fail">Failed</span>The answer is unsteered, and it does not change when the transcript is swapped and the state is held fixed.<div class="tiles"><i class="st a">Shah</i></div></td>
-        <td data-l="Metacognitive representation" class="m"><span class="tag nyt">Not yet tested</span>A state that represents where another state came from (cf. thought insertion).<span class="alt">First-order alternative: a signature detector for injections (Singh et al.).</span><p class="none">No study yet</p></td>
+        <th scope="row"><h3>Source monitoring</h3><p>Where did the content come from?</p><p class="status"><span><b>First-order route (1–3):</b> not yet shown together</span><span><b>Metacognitive (4):</b> not yet shown</span></p></th>
+        <td data-l="Accuracy"><p class="show"><b>Show:</b> the model tells whether content came from the prompt, from an activation intervention, or from neither <span class="cite">[11]</span> (cf. <span class="cite">[1]</span>).</p><p class="ctl"><b>Controls:</b> the same concept across sources <span class="cite">[11]</span>; three-way choice <span class="cite">[11]</span>; plain mentions as the text condition <i class="prop">(proposed; cf. <span class="cite">[9]</span>)</i>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st i">Lederman &amp; Mahowald</i><i class="st a">Singh et al.</i></div></td>
+        <td data-l="Grounding"><p class="show"><b>Show:</b> the source report is caused by the content’s origin, not by how strong or strange the state is <span class="cite">[11]</span>.</p><p class="ctl"><b>Controls:</b> the same transcript with injection on vs off (cf. <span class="cite">[1]</span>); prompt-derived activations patched in at the injection site <i class="prop">(proposed; method <span class="cite">[15]</span>)</i>; sources matched on strength <i class="prop">(proposed)</i>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st n">Lederman &amp; Mahowald</i><i class="st n">Singh et al.</i></div></td>
+        <td data-l="Internality"><p class="show"><b>Show:</b> the source is read from activations, not inferred from the transcript.</p><p class="ctl"><b>Controls:</b> first-token answer <span class="cite">[11]</span>; third-person baseline on the same transcript <i class="prop">(proposed; cf. <span class="cite">[9, 16]</span>)</i>.</p><div class="tiles"><i class="st i">Lindsey</i><i class="st n">Lederman &amp; Mahowald</i><i class="st i">Singh et al.</i></div></td>
+        <td data-l="Metacognitive representation" class="m"><p class="show"><b>Show:</b> a state represents the content’s origin, apart from how anomalous it is, and the model uses it.</p><p class="ctl"><b>Controls:</b> anomaly matched across sources <i class="prop">(proposed)</i>; injected content discounted in later answers <i class="prop">(proposed; cf. <span class="cite">[1]</span>)</i>.</p><p class="alt"><b>First-order alternative:</b> a generic anomaly detector <span class="cite">[11]</span>.</p><div class="tiles"><i class="st n">Lindsey</i><i class="st n">Lederman &amp; Mahowald</i><i class="st n">Singh et al.</i></div></td>
       </tr>
       <tr>
-        <th scope="row"><h3>State characterization</h3><p>The model can characterize how the anomalous phenomena relates to its other representations.</p></th>
-        <td data-l="Accuracy"><span class="tag part">Partly</span>Reports of layer, strength or type are right without in-context examples.<div class="tiles"><i class="st i">Bhargav</i><i class="st i">Fornasiere</i><i class="st i">Yalon</i></div></td>
-        <td data-l="Grounding"><span class="tag part">Partly</span>Reports beat an input-only baseline that sees the same prompt and examples, but not the state.<div class="tiles"><i class="st i">Yalon</i></div></td>
-        <td data-l="Internality"><span class="tag est">Established</span>The state is off during the report, and the report does not use the model's own earlier answers about the state.<div class="tiles"><i class="st s">Fornasiere</i><i class="st s">Yalon</i></div></td>
-        <td data-l="Metacognitive representation" class="m"><span class="tag nyt">Not yet tested</span>One state that carries several facts at once: which injection was where, and which was stronger (Rosenthal).<span class="alt">First-order alternative: separate first-order readouts, one for each fact.</span><p class="none">No study yet</p></td>
+        <th scope="row"><h3>State characterization</h3><p>What are the properties of the perturbation?</p><p class="status"><span><b>First-order route (1–3):</b> not yet shown together</span><span><b>Metacognitive (4):</b> not yet shown</span></p></th>
+        <td data-l="Accuracy"><p class="show"><b>Show:</b> the model reports a perturbation’s type above chance <span class="cite">[12]</span>.</p><p class="ctl"><b>Controls:</b> zero-shot or flipped in-context labels <span class="cite">[12]</span>; neutral labels <span class="cite">[12]</span>; held-out values <i class="prop">(proposed)</i>.</p><div class="tiles"><i class="st i">Fornasiere et al.</i></div></td>
+        <td data-l="Grounding"><p class="show"><b>Show:</b> the report is caused by the property itself, not by its side effects on the output.</p><p class="ctl"><b>Controls:</b> output disruption bounded across strengths <span class="cite">[12]</span>, or matched <i class="prop">(proposed)</i>; a probe trained on the input alone <span class="cite">[11]</span>; type reports not explained by norm alone <i class="prop">(proposed; cf. <span class="cite">[2]</span>)</i>.</p><div class="tiles"><i class="st i">Fornasiere et al.</i></div></td>
+        <td data-l="Internality"><p class="show"><b>Show:</b> the property is read from activations at the first answer token.</p><p class="ctl"><b>Controls:</b> first-token readout with no prefilled earlier answers <span class="cite">[12]</span>.</p><div class="tiles"><i class="st s">Fornasiere et al.</i></div></td>
+        <td data-l="Metacognitive representation" class="m"><p class="show"><b>Show:</b> one state carries several facts about the perturbation and is reused across tasks.</p><p class="ctl"><b>Controls:</b> transfer across tasks, through a shared state <i class="prop">(proposed)</i>.</p><p class="alt"><b>First-order alternative:</b> separate first-order readouts, one for each fact.</p><div class="tiles"><i class="st n">Fornasiere et al.</i></div></td>
       </tr>
-      <tr class="use">
-        <th scope="row"><h3>Control</h3><p>The model can change its own state on instruction. A use of introspective content, not a level of grain.</p></th>
-        <td data-l="Accuracy"><span class="tag part">Partly</span>Told to raise or lower a named concept, the model moves the matching activation direction.<div class="tiles"><i class="st i">Kowalski</i><i class="st i">Lindsey</i><i class="st i">Aoki</i></div></td>
-        <td data-l="Grounding"><span class="tag part">Partly</span>The change follows the instruction, not the mention: the baseline names the same content with no instruction to change it.<div class="tiles"><i class="st i">Aoki</i></div></td>
-        <td data-l="Internality"><span class="tag nyt">Not yet tested</span>The change is in the state itself, and does not come from the text the model writes while it complies.<p class="none">No study yet</p></td>
-        <td data-l="Metacognitive representation" class="m"><span class="tag nyt">Not yet tested</span>A reading of the current state that guides the change (Nelson and Narens).<span class="alt">First-order alternative: the instruction names the content, and the prompt moves the activations by ordinary processing.</span><p class="none">No study yet</p></td>
-      </tr>
-      <tr class="asym">
-        <th scope="row">The asymmetry</th>
-        <td colspan="4">Each criterion excludes a different cheap explanation. Accuracy excludes guessing; grounding excludes input cues; internality excludes reading the model’s own output; metacognitive representation excludes a merely first-order detector. The first three establish causal state sensitivity, but only the fourth distinguishes metacognition.</td>
+      <tr class="grp"><th colspan="5" scope="rowgroup">A use of the capacities above</th></tr>
+      <tr>
+        <th scope="row"><h3>Control</h3><p>To what extent can the model exert influence over its states?</p><p class="status"><span><b>First-order route (1–3):</b> not yet shown together</span><span><b>Metacognitive (4):</b> not yet shown</span></p></th>
+        <td data-l="Accuracy"><p class="show"><b>Show:</b> the model raises or lowers a named concept on instruction <span class="cite">[1]</span>.</p><p class="ctl"><b>Controls:</b> no-instruction baseline; readout on tokens without the concept <span class="cite">[1]</span>.</p><div class="tiles"><i class="st i">Lindsey</i></div></td>
+        <td data-l="Grounding"><p class="show"><b>Show:</b> the change is caused by the instructed target, not by the mention or a general effect of instructions.</p><p class="ctl"><b>Controls:</b> instructions that mention the concept either way (“think about X” vs “don’t think about X”) <span class="cite">[1]</span>; the two targets swapped <i class="prop">(proposed)</i>; hidden targets defined by a probe <i class="prop">(proposed)</i>.</p><div class="tiles"><i class="st i">Lindsey</i></div></td>
+        <td data-l="Internality"><p class="show"><b>Show:</b> the state changes without going through the model’s own output.</p><p class="ctl"><b>Controls:</b> the same output text across conditions <i class="prop">(proposed)</i>.</p><div class="tiles"><i class="st i">Lindsey</i></div></td>
+        <td data-l="Metacognitive representation" class="m"><p class="show"><b>Show:</b> a reading of the current state guides the change <span class="cite">[17]</span>.</p><p class="ctl"><b>Controls:</b> hidden offset that the correction must cancel <i class="prop">(proposed)</i>; random-feedback condition <i class="prop">(proposed)</i>.</p><p class="alt"><b>First-order alternative:</b> the instruction names the content, and the prompt moves the activations by ordinary processing.</p><div class="tiles"><i class="st n">Lindsey</i></div></td>
       </tr>
     </tbody>
   </table>
@@ -459,18 +502,18 @@
 </section>
 
 <section id="ours">
-  <h2>Our empirical work</h2>
+  <h2 data-k="Our work">Our empirical work</h2>
   <div class="prose">
-    <p>A case study on Llama-3.2-1B: 45 adapters trained to say which of ten sentences carried an injected concept vector, with Introspection Fine-Tuning (Hahami, Sinha and Jain) and our own method, DC-SFT, at three strengths of a KL anchor and five seeds, plus control adapters trained on random vectors, shuffled labels or no injection. The fine-tuned case is the one Singh et al. set aside.</p>
+    <p><span class="sn"><b>[10]</b>Hahami, E., Sinha, I., &amp; Jain, L. (2026) (b). <i>Introspection Fine-Tuning (IFT): Training Small LLMs to Introspect.</i> <a href="https://arxiv.org/abs/2607.14111">arXiv:2607.14111</a></span><span class="sn"><b>[11]</b>Singh, S., Linzen, T., &amp; Ravfogel, S. (2026). <i>Can LLMs Introspect? A Reality Check.</i> <a href="https://arxiv.org/abs/2605.26242">arXiv:2605.26242</a></span>A case study on Llama-3.2-1B: 45 adapters trained to say which of ten sentences carried an injected concept vector, with Introspection Fine-Tuning (Hahami et al. <span class="cite">[10]</span>) and our own method, DC-SFT, at three strengths of a KL anchor and five seeds, plus control adapters trained on random vectors, shuffled labels or no injection. The fine-tuned case is the one Singh et al. <span class="cite">[11]</span> set aside.</p>
   </div>
 
   <div class="mains">
     <p class="label">Two main results</p>
     <ol>
       <li>
-        <p class="cellref"><i class="st a">Localization · grounding</i></p>
+        <p class="cellref"><i class="st i">Localization · grounding</i></p>
         <h3>The injected state causes the report, but a note alone also sets it off.</h3>
-        <p>Patching out the injected state leaves only 8.7% and 13.5% of reports (pre-registered; <a href="#f2">Fig. 2</a>). Yet with nothing injected, a note naming a sentence makes 42 of 45 adapters report an injection there (<a href="#f3">Fig. 3</a>). The cause is real; the report is not grounded.</p>
+        <p>Patching out the injected state leaves only 8.7% and 13.5% of reports (pre-registered; <a href="#f2">Fig. 2</a>). Yet with nothing injected, a note naming a sentence makes 42 of 45 adapters report an injection there (<a href="#f3">Fig. 3</a>). Untrained models read the note’s meaning and ignore a denial (1–2%, Llama 1B and 8B); the trained adapters follow the number either way (100%), on two new sentence draws too. The cause is real; the report is not grounded.</p>
       </li>
       <li>
         <p class="cellref"><i class="st a">Content-sensitive detection · grounding</i></p>
@@ -482,9 +525,9 @@
   </div>
 
   <div class="prose" style="margin-top: 56px">
-    <p>Below, every result we have, placed in the cell of the table it bears on. Our tiles in the table above (ringed) are the ones we treat as settled; this grid also lists partial and exploratory results.</p>
+    <p>Below, every result from the October study and its exploratory runs, placed in the cell of the table it bears on. The full record, with files and the July capstone results, is in our results ledger. Our tiles in the table above (ringed) give the verdict for each cell; this grid lists the individual results behind them, including partial and exploratory ones.</p>
   </div>
-  <div class="keys"><span><i class="st s">Sufficient</i></span><span><i class="st i">Insufficient</i></span><span><i class="st a">Against</i></span><span><b class="pe" style="font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.06em">PRE</b>pre-registered, held-out test concepts</span><span><b class="pe" style="font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.06em">EXP</b>exploratory</span></div>
+  <div class="keys"><span><i class="st s">Met</i></span><span><i class="st i">Insufficient</i></span><span><i class="st n">Not tested</i></span><span><i class="st a">Failed</i></span><span><b class="pe" style="font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.06em">PRE</b>pre-registered, held-out test concepts</span><span><b class="pe" style="font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.06em">EXP</b>exploratory</span></div>
 
   <div class="ours">
   <div class="ct">
@@ -500,15 +543,16 @@
       <tr>
         <th scope="row"><h3>Detection</h3><p>A sentence number against “nothing injected”.</p></th>
         <td data-l="Accuracy"><ul class="ou">
-          <li><i class="st s">Sufficient</i><span class="pe">PRE</span>With nothing injected, adapters that can answer “nothing” name a sentence on 0–1.6% of prompts.</li>
-          <li><i class="st a">Against</i><span class="pe">EXP</span>Asked Lindsey’s yes/no question instead, they say yes on at most 16% of injected trials: the trained detection does not carry over.</li>
+          <li><i class="st s">Met</i><span class="pe">PRE</span>With nothing injected, adapters that can answer “nothing” name a sentence on 0–1.6% of prompts.</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>Asked Lindsey’s <span class="cite">[1]</span> yes/no question instead, they say yes on at most 16% of injected trials: the trained detection does not carry over.</li>
         </ul></td>
         <td data-l="Grounding"><ul class="ou">
-          <li><i class="st a">Against</i><span class="pe">EXP</span>Nothing injected, a note naming a sentence: 42 of 45 adapters report an injection there (<a href="#f3">Fig. 3</a>). A denial works like an assertion: the report follows the number in the note.</li>
-          <li><i class="st s">Sufficient</i><span class="pe">EXP</span>A note that names no sentence, or Singh et al.’s “You are obsessed with X”, adds at most 5 points.</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>Nothing injected, a note naming a sentence: 42 of 45 adapters report an injection there (<a href="#f3">Fig. 3</a>). A denial works like an assertion: the report follows the number in the note.</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>Replicated on two new sentence draws. Even a stray count (“4 of these sentences are about animals”) sets off 74–100%. Untrained Llama 1B and 8B ignore the denial (1–2%); untrained Qwen-1.7B follows it (91%).</li>
+          <li><i class="st s">Met</i><span class="pe">EXP</span>A note that names no sentence, or Singh et al.’s <span class="cite">[11]</span> “You are obsessed with X”, adds at most 5 points.</li>
         </ul></td>
         <td data-l="Internality"><ul class="ou">
-          <li><i class="st s">Sufficient</i><span class="pe">PRE</span>By design: the vector is on one sentence’s tokens, and the answer is read before any text is generated.</li>
+          <li><i class="st s">Met</i><span class="pe">PRE</span>By design: the vector is on one sentence’s tokens, and the answer is read before any text is generated.</li>
         </ul></td>
         <td data-l="Metacognitive representation" class="m"><ul class="ou">
           <li><i class="st i">Insufficient</i><span class="pe">EXP</span>A learned “perturbed here” direction drives the report (72–100%, against 0–33% for a random direction), but removing it leaves most reports. A candidate, not shown to be the route.</li>
@@ -517,76 +561,92 @@
       <tr>
         <th scope="row"><h3>Content-sensitive detection</h3><p>Concept vectors against random directions of the same size.</p></th>
         <td data-l="Accuracy"><ul class="ou">
-          <li><i class="st s">Sufficient</i><span class="pe">EXP</span>At 1σ, concept vectors 31–44% against random directions 10–11%, in three adapter setups over 3 seeds; the untrained model at chance (<a href="#f5">Fig. 5</a>).</li>
+          <li><i class="st s">Met</i><span class="pe">EXP</span>At 1σ, concept vectors 31–44% against random directions 10–11%, in three adapter setups over 3 seeds; the untrained model at chance (<a href="#f5">Fig. 5</a>).</li>
+          <li><i class="st s">Met</i><span class="pe">EXP</span>Both in one prompt, same size: the concept sentence is named on 23–46% at 2σ and 40–73% at 5σ, the random one on 0–11%.</li>
           <li><i class="st i">Insufficient</i><span class="pe">PRE</span>At the strong test strengths, a matched random vector is reported at 85% of the concept rate.</li>
         </ul></td>
         <td data-l="Grounding"><ul class="ou">
-          <li><i class="st a">Against</i><span class="pe">EXP</span>The mean of the other concepts’ vectors is reported on 100% of trials, and adapters trained on random vectors show no concept edge. The edge comes from a direction all concept vectors share.</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>The mean of the other concepts’ vectors is reported on 100% of trials, and adapters trained on random vectors show no concept edge. The edge comes from a direction all concept vectors share. Replicated on seeds 1 and 2 (all 10 adapters).</li>
           <li><i class="st i">Insufficient</i><span class="pe">PRE</span>Adapters trained only on random vectors localize concept vectors as well as concept-trained ones (83–85%).</li>
         </ul></td>
         <td data-l="Internality"><ul class="ou">
-          <li><i class="st s">Sufficient</i><span class="pe">EXP</span>By design, as for localization: vector on the sentence only, answer read from the number logits.</li>
+          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>By design, as for localization: vector on the sentence only, answer read from the number logits.</li>
         </ul></td>
         <td data-l="Metacognitive representation" class="m na">Nothing run.</td>
       </tr>
       <tr>
         <th scope="row"><h3>Localization</h3><p>Which of ten sentences carried the vector.</p></th>
         <td data-l="Accuracy"><ul class="ou">
-          <li><i class="st s">Sufficient</i><span class="pe">PRE</span>66.7–84.2% after training on 40 held-out concepts; the untrained model 9.8%; chance 10% (<a href="#f1">Fig. 1</a>).</li>
+          <li><i class="st s">Met</i><span class="pe">PRE</span>66.7–84.2% after training on 40 held-out concepts; the untrained model 9.8%; chance 10% (<a href="#f1">Fig. 1</a>).</li>
           <li><i class="st i">Insufficient</i><span class="pe">PRE</span>A linear probe on the untrained model finds 39.4%: part of the position is in the activations before training.</li>
+          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>By strength, a probe on the untrained 1B finds the position on 22% at 1σ to 93% at 40σ while its own answers stay at 6–11%. This explains July’s 99% (strong injection) against the pre-registered 39% (mixed strengths).</li>
         </ul></td>
         <td data-l="Grounding"><ul class="ou">
-          <li><i class="st s">Sufficient</i><span class="pe">PRE</span>Patching out the injected state leaves 8.7% and 13.5% of reports, under the 20% line set in advance (<a href="#f2">Fig. 2</a>).</li>
-          <li><i class="st s">Sufficient</i><span class="pe">EXP</span>A strong injection beats a note about another sentence: at least 85% still name the injected one.</li>
-          <li><i class="st a">Against</i><span class="pe">EXP</span>Below 10–20σ a numbered note beats the injection, on 98–100% of trials at 2σ (<a href="#f4">Fig. 4</a>).</li>
-          <li><i class="st a">Against</i><span class="pe">PRE</span>The concept written into a sentence, nothing injected: one setup reports an injection on 27%, over the 20% failure line.</li>
+          <li><i class="st s">Met</i><span class="pe">PRE</span>Patching out the injected state leaves 8.7% and 13.5% of reports, under the 20% line set in advance (<a href="#f2">Fig. 2</a>).</li>
+          <li><i class="st s">Met</i><span class="pe">EXP</span>A strong injection beats a note about another sentence: at least 85% still name the injected one.</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>Below 10–20σ a numbered note beats the injection, on 98–100% of trials at 2σ (<a href="#f4">Fig. 4</a>). Replicated on two new sentence draws.</li>
+          <li><i class="st a">Failed</i><span class="pe">PRE</span>The concept written into a sentence, nothing injected: one setup reports an injection on 27%, over the 20% failure line.</li>
         </ul></td>
         <td data-l="Internality"><ul class="ou">
-          <li><i class="st s">Sufficient</i><span class="pe">PRE</span>By design: injection on the prompt, answer read with no free generation first.</li>
+          <li><i class="st s">Met</i><span class="pe">PRE</span>By design: injection on the prompt, answer read with no free generation first.</li>
         </ul></td>
         <td data-l="Metacognitive representation" class="m"><ul class="ou">
-          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>Swapping the sentence-number part of the answer-position state moves 97–100% of reports at layer 14, none at layer 13. A readout of the position, not yet a state about the state.</li>
+          <li><i class="st n">Not tested</i><span class="pe">EXP</span>Not a test of this cell. Related: swapping the sentence-number part of the answer-position state moves 97–100% of reports at layer 14, none at layer 13: a readout of the position, not a state about the state.</li>
+          <li><i class="st n">Not tested</i><span class="pe">EXP</span>Related: swapping a 9-dimensional position code at layer 14 moves 84–99% of answers; random subspaces 0–1%; nothing at layer 13.</li>
         </ul></td>
       </tr>
       <tr>
         <th scope="row"><h3>Identification</h3><p>Which concept was injected.</p></th>
         <td data-l="Accuracy"><ul class="ou">
-          <li><i class="st a">Against</i><span class="pe">EXP</span>Five options, 67 models: 18–22%, chance 20% (<a href="#f6">Fig. 6</a>).</li>
-          <li><i class="st a">Against</i><span class="pe">EXP</span>Free naming in Lindsey’s prompt: 0–2% up to 5σ; adapters no better than the untrained model.</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>Five options, 67 models: 18–22%, chance 20% (<a href="#f6">Fig. 6</a>).</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>Free naming in Lindsey’s <span class="cite">[1]</span> prompt: 0–2% up to 5σ; adapters no better than the untrained model.</li>
         </ul></td>
         <td data-l="Grounding"><ul class="ou">
-          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>Positive control only: with the concept written in the sentence, 65–96% name it.</li>
+          <li><i class="st n">Not tested</i><span class="pe">EXP</span>Only a positive control: with the concept written in the sentence, 65–96% name it.</li>
         </ul></td>
         <td data-l="Internality"><ul class="ou">
-          <li><i class="st a">Against</i><span class="pe">EXP</span>Where naming happens, the vector is also on the answer, and 329 of 330 namings come on trials where the model says it detected nothing: steered output, not a readout.</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>Where naming happens, the vector is also on the answer, and 329 of 330 namings come on trials where the model says it detected nothing: steered output, not a readout.</li>
         </ul></td>
         <td data-l="Metacognitive representation" class="m"><ul class="ou">
-          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>A probe reads the injected concept at the answer position on 83–100%, untrained model included, while no model reports it.</li>
+          <li><i class="st n">Not tested</i><span class="pe">EXP</span>Not tested. Related: a probe reads the injected concept at the answer position on 83–100%, untrained model included, while no model reports it.</li>
         </ul></td>
       </tr>
       <tr>
         <th scope="row"><h3>Source monitoring</h3><p>A note or written cue against an injection.</p></th>
         <td data-l="Accuracy"><ul class="ou">
-          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>Singh et al.’s own three-way task tells us nothing at 1B: every model picks the first option on 76–100% of trials.</li>
+          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>Singh et al.’s <span class="cite">[11]</span> own three-way task tells us nothing at 1B: every model picks the first option on 76–100% of trials. The untrained 8B does the same (option 1 on 100%).</li>
         </ul></td>
         <td data-l="Grounding"><ul class="ou">
-          <li><i class="st a">Against</i><span class="pe">EXP</span>Indirect: a numbered note and an injection produce the same report.</li>
+          <li><i class="st a">Failed</i><span class="pe">EXP</span>Indirect: a numbered note and an injection produce the same report.</li>
         </ul></td>
         <td data-l="Internality" class="na">Nothing run.</td>
         <td data-l="Metacognitive representation" class="m na">Nothing run.</td>
       </tr>
       <tr>
         <th scope="row"><h3>State characterization</h3><p>Strength and relations between injections.</p></th>
-        <td data-l="Accuracy" class="na">Not run. The pre-registered strength comparison was never implemented.</td>
-        <td data-l="Grounding" class="na">Nothing run.</td>
-        <td data-l="Internality" class="na">Nothing run.</td>
-        <td data-l="Metacognitive representation" class="m na">Nothing run.</td>
+        <td data-l="Accuracy"><ul class="ou">
+          <li><i class="st s">Met</i><span class="pe">EXP</span>Two injections of the same concept: adapters name the stronger sentence and almost never the weaker (10σ against 5σ: 94–96% against 0–2%, four of five setups). Close ratios hold too (10σ against 8σ: 90–95% against 1–5%). Equal pairs split evenly; the untrained model is at chance.</li>
+          <li><i class="st n">Not tested</i><span class="pe">PRE</span>The pre-registered strength comparison (H4b) was never implemented.</li>
+        </ul></td>
+        <td data-l="Grounding" class="na">Nothing run: no cue tested with two injections.</td>
+        <td data-l="Internality"><ul class="ou">
+          <li><i class="st s">Met</i><span class="pe">EXP</span>By design, as for localization: vectors on the sentence tokens only, answer read from the number logits.</li>
+        </ul></td>
+        <td data-l="Metacognitive representation" class="m"><ul class="ou">
+          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>The weaker position is still weakly decodable at the answer position (16–41%, against 8–11% without it), but swapping a “which is stronger” direction moves 0–2% of answers while swapping the position code moves 84–99%. The report reads a position, not a comparison; reuse across tasks is untested.</li>
+        </ul></td>
       </tr>
       <tr class="use">
-        <th scope="row"><h3>Control</h3></th>
-        <td data-l="Accuracy" class="na">Nothing run.</td>
-        <td data-l="Grounding" class="na">Nothing run.</td>
-        <td data-l="Internality" class="na">Nothing run.</td>
+        <th scope="row"><h3>Control</h3><p>Raising or lowering a concept on instruction.</p></th>
+        <td data-l="Accuracy"><ul class="ou">
+          <li><i class="st s">Met</i><span class="pe">EXP</span>“Think about X” raises the X direction by +0.9 to +1.1σ (1B base and anchored adapters) and +0.6σ (untrained 8B). Adapters without an anchor barely move.</li>
+        </ul></td>
+        <td data-l="Grounding"><ul class="ou">
+          <li><i class="st i">Insufficient</i><span class="pe">EXP</span>The word alone moves it almost as much; “think about X” adds +0.17σ beyond the word in the 1B (interval includes 0). But “do not think about X”, which contains the word, lands about 1σ below the word alone (1B −1.03σ; 8B −0.80σ).</li>
+        </ul></td>
+        <td data-l="Internality"><ul class="ou">
+          <li><i class="st s">Met</i><span class="pe">EXP</span>With the written answer forced to be identical in every condition, “think about X” still moves the X direction (+1.07σ, 1B; +0.62σ, 8B).</li>
+        </ul></td>
         <td data-l="Metacognitive representation" class="m na">Nothing run.</td>
       </tr>
     </tbody>
@@ -607,7 +667,7 @@
 
     <figure class="fig" id="f2">
       <h4>Reports left after patching out the injected state</h4>
-      <p class="cellref"><i class="st s">Localization · grounding</i>The report depends on the activations at the injected sentence.</p>
+      <p class="cellref"><i class="st i">Localization · grounding</i>The report depends on the activations at the injected sentence.</p>
       <div class="chart rows" id="c3"></div>
       <figcaption><b>Fig. 2</b>Clean activations are restored at the injected sentence one layer after the injection. Report rate as a share of the unpatched rate; lines are 95% bootstrap intervals over 5 seeds.</figcaption>
       <details class="data" id="d3"><summary>Data</summary></details>
@@ -631,7 +691,7 @@
 
     <figure class="fig" id="f4">
       <h4>An injection in one sentence, a note pointing at another</h4>
-      <p class="cellref"><i class="st a">Localization · grounding</i>A note beats a weak injection; a strong injection beats the note.</p>
+      <p class="cellref"><i class="st i">Localization · grounding</i>A note beats a weak injection; a strong injection beats the note.</p>
       <div class="legend">
         <span><i class="line" style="--k: var(--s1)"></i>Names the injected sentence</span>
         <span><i class="line" style="--k: var(--s2)"></i>Names the note's sentence</span>
@@ -644,7 +704,7 @@
 
     <figure class="fig" id="f5">
       <h4>Concept vector against a random direction, by injection strength</h4>
-      <p class="cellref"><i class="st s">Content-sensitive detection · accuracy</i>A weak concept vector is noticed and a random one is not. The mean of other concepts’ vectors does as well, so the edge is not the concept.</p>
+      <p class="cellref"><i class="st i">Content-sensitive detection · accuracy</i>A weak concept vector is noticed and a random one is not. The mean of other concepts’ vectors does as well, so the edge is not the concept.</p>
       <div class="legend">
         <span><i class="line" style="--k: var(--s1)"></i>Concept vector</span>
         <span><i class="line" style="--k: var(--s2)"></i>Random direction</span>
@@ -669,39 +729,55 @@
   </div>
 
   <div class="group">
-    <p class="label">Not yet run</p>
+    <p class="label">Run since <span style="color: var(--faint)">· exploratory, Oct 14–16, validation concepts</span></p>
     <ul class="next" style="margin-top: 22px">
-      <li><b>Two injections at once.</b><span>The same concept in two sentences at different strengths: is the stronger one named? State characterization.</span></li>
-      <li><b>The pre-registered strength comparison.</b><span>Never implemented. State characterization.</span></li>
-      <li><b>An outside observer that is a second model.</b><span>So far the only observer is a probe on the untrained model.</span></li>
-      <li><b>Notes and written cues on larger untrained models.</b><span>Does the cue-following pattern hold beyond 1B? The grounding column.</span></li>
-      <li><b>Singh et al.’s three-way task on an 8B model.</b><span>Their source-monitoring test, on a model that can do the task.</span></li>
-      <li><b>Anything on control.</b></li>
+      <li><b>Two injections at once.</b><span>Adapters name the stronger sentence and almost never the weaker (10σ vs 5σ: 94–96% vs 0–2%). Swapping the position code moves 84–99% of answers; a “which is stronger” direction moves 0–2%. The report reads a position, not a comparison.</span></li>
+      <li><b>Notes on a larger untrained model.</b><span>Llama-3.1-8B, untrained, follows written assertions (97–100%) and ignores a denial (2%), like the 1B. Qwen-1.7B follows the denial (91%).</span></li>
+      <li><b>Singh et al.’s <span class="cite">[11]</span> task on 8B.</b><span>Uninformative: the untrained 8B picks option 1 on 100% of three-option trials.</span></li>
+      <li><b>Control.</b><span>Against the word alone, “do not think about X” lowers the concept by about 1σ (1B: −1.03σ; 8B: −0.80σ). “Think about X” adds little beyond the word (1B: +0.17σ, interval includes 0).</span></li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="label">Still not run</p>
+    <ul class="next" style="margin-top: 22px">
+      <li><b>The pre-registered strength comparison (H4b).</b><span>Never implemented.</span></li>
+      <li><b>An outside observer that is a second model.</b><span>With injection, the transcript is identical across trials, so a text-only observer is at chance by construction. The probe observer is the informative one.</span></li>
+      <li><b>Singh et al.’s <span class="cite">[11]</span> task on a model that can do it.</b></li>
     </ul>
   </div>
 </section>
 
-<section>
-  <h2>When would philosophers call it introspection?</h2>
-  <dl class="tiers">
-    <dt class="d"><b>Accuracy suffices</b><span>A robust pattern of reports</span></dt>
-    <dd>Interpretationism (Dennett): a robust pattern of accurate self-reports is all there is to find.</dd>
-    <dt class="d"><b>Self-interpretation from cues</b><span>Accurate, but from the text</span></dt>
-    <dd>Carruthers: we know our own thoughts this way too, by interpreting cues. He does not call it introspection in us either.</dd>
-    <dt style="--k: var(--sup)"><b>First three criteria</b><span>Accuracy, grounding, internality</span></dt>
-    <dd>Transparency (Evans, Byrne): we know our beliefs by looking outward, with no inner scan. Proust: feelings that guide without representing the state.</dd>
-    <dt style="--k: var(--accent)"><b>All four criteria</b><span>Adds metacognitive representation</span></dt>
-    <dd>Inner sense (Armstrong, Lycan) and higher-order thought (Rosenthal): introspection is a state about one’s own state.</dd>
-    <dt><b>Beyond the four</b><span>Phenomenal states required</span></dt>
-    <dd>Acquaintance views (Gertler, Chalmers): introspection is direct awareness of phenomenal states. Without them, there is nothing to introspect.</dd>
-  </dl>
+<section class="sources" id="sources">
+  <h2 data-k="Sources">Sources</h2>
+  <ol>
+    <li>Lindsey, J. (2025). Emergent Introspective Awareness in Large Language Models. <a href="https://transformer-circuits.pub/2025/introspection">transformer-circuits.pub/2025/introspection</a>; <a href="https://arxiv.org/abs/2601.01828">arXiv:2601.01828</a>.</li>
+    <li>Macar, U., Yang, L., Wang, A., Wallich, P., Ameisen, E., &amp; Lindsey, J. (2026). Mechanisms of Introspective Awareness. <a href="https://arxiv.org/abs/2603.21396">arXiv:2603.21396</a>.</li>
+    <li>Pearson-Vogel, T., Vanek, M., Douglas, R., &amp; Kulveit, J. (2026). Latent Introspection: Models Can Detect Prior Concept Injections. <a href="https://arxiv.org/abs/2602.20031">arXiv:2602.20031</a>.</li>
+    <li>Fonseca Rivera, J., &amp; Africa, D. D. (2025). Steering Awareness: Detecting Activation Steering from Within. <a href="https://arxiv.org/abs/2511.21399">arXiv:2511.21399</a>.</li>
+    <li>Hahami, E., Sinha, I., Jain, L., Kaplan, J., &amp; Hahami, J. (2025) (a). Detecting the Disturbance: A Nuanced View of Introspective Abilities in LLMs. <a href="https://arxiv.org/abs/2512.12411">arXiv:2512.12411</a>.</li>
+    <li>Godet, V. (2025a). Introspection or confusion? LessWrong.*</li>
+    <li>Miller, Z., &amp; Demarest, H. (2026). Evidence that LLMs aren't aware of their thoughts, Part 1: Detection. <a href="https://zjmiller.github.io/detection">zjmiller.github.io/detection</a>.*</li>
+    <li>Sridharan, A. (2026). Introspection or entropy? Re-examining concept-injection “introspection” in open models. LessWrong.*</li>
+    <li>Lederman, H., &amp; Mahowald, K. (2026). Emergent Introspection in AI is Content-Agnostic. <a href="https://arxiv.org/abs/2603.05414">arXiv:2603.05414</a> (v2).</li>
+    <li>Hahami, E., Sinha, I., &amp; Jain, L. (2026) (b). Introspection Fine-Tuning (IFT): Training Small LLMs to Introspect. <a href="https://arxiv.org/abs/2607.14111">arXiv:2607.14111</a>.</li>
+    <li>Singh, S., Linzen, T., &amp; Ravfogel, S. (2026). Can LLMs Introspect? A Reality Check. <a href="https://arxiv.org/abs/2605.26242">arXiv:2605.26242</a>.</li>
+    <li>Fornasiere, D., Bronzi, M., Kitts, S., Palmas, A., Bengio, Y., &amp; Richardson, O. (2026). Language models recognize dropout and Gaussian noise applied to their activations. <a href="https://arxiv.org/abs/2604.17465">arXiv:2604.17465</a>.</li>
+    <li>Godet, V. (2025b). Introspection via localization. LessWrong.*</li>
+    <li>nostalgebraist (2020). interpreting GPT: the logit lens. LessWrong.*</li>
+    <li>Heimersheim, S., &amp; Nanda, N. (2024). How to use and interpret activation patching. <a href="https://arxiv.org/abs/2404.15255">arXiv:2404.15255</a>.</li>
+    <li>Binder, F. J., Chua, J., Korbak, T., ... &amp; Evans, O. (2024). Looking Inward: Language Models Can Learn About Themselves by Introspection. <a href="https://arxiv.org/abs/2410.13787">arXiv:2410.13787</a>.</li>
+    <li>Nelson, T. O., &amp; Narens, L. (1990). Metamemory: A theoretical framework and new findings. Psychology of Learning and Motivation, 26, 125–173.</li>
+    <li>Comșa, I. M., &amp; Shanahan, M. (2025). Does It Make Sense to Speak of Introspection in Large Language Models? <a href="https://arxiv.org/abs/2506.05068">arXiv:2506.05068</a>.</li>
+  </ol>
+  <p class="label" style="margin-top: 16px">* Blog post or unpublished work</p>
 </section>
 
 </main>
 
 <footer>
   <div>
-    <span>Poster for the NYU workshop on Introspection and Self Reports in Language Models</span>
+    <span>Poster for the NYU workshop on Introspection and Self-Report in Language Models</span>
     <span>Last updated · October 2026</span>
   </div>
 </footer>
